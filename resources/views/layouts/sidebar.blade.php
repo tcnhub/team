@@ -106,13 +106,25 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReservas" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarReservas">
-                        <i class="ri-calendar-check-line"></i> <span data-key="t-dashboards">Reservas</span>
+                        <i class="ri-calendar-check-line"></i> <span>Reservas</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReservas">
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item"><a href="{{ route('admin.reservas.index')}}" class="nav-link">Lista de Reservas</a></li>
                             <li class="nav-item"><a href="{{ route('admin.reservas.create')}}" class="nav-link">Nueva Reserva</a></li>
-                            <li class="nav-item"><a href="{{ route('admin.agentes.index')}}" class="nav-link">Agentes</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarAgentes" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarAgentes">
+                        <i class="ri-customer-service-2-line"></i> <span>Agentes</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarAgentes">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{{ route('admin.agentes.index')}}" class="nav-link">Lista de Agentes</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.agentes.create')}}" class="nav-link">Nuevo Agente</a></li>
                         </ul>
                     </div>
                 </li>
