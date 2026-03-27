@@ -32,6 +32,12 @@ class Cliente extends Model
         'activo',
     ];
 
+    protected $casts = [
+        'fecha_nacimiento'     => 'date',
+        'pasaporte_expiracion' => 'date',
+        'activo'               => 'boolean',
+    ];
+
     public function pais()
     {
         return $this->belongsTo(Pais::class);
