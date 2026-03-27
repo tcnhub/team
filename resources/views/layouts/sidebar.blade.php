@@ -112,6 +112,7 @@
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item"><a href="{{ route('admin.reservas.index')}}" class="nav-link">Lista de Reservas</a></li>
                             <li class="nav-item"><a href="{{ route('admin.reservas.create')}}" class="nav-link">Nueva Reserva</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.tours.index') }}" class="nav-link">Reservas por Tour</a></li>
                         </ul>
                     </div>
                 </li>

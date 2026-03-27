@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Reserva;
 use App\Models\Tour;
 use App\Models\TourCalendarYear;
 use App\Models\TourAvailability;
@@ -153,6 +154,56 @@ class TourCalendarController extends Controller
         }
 
         return back()->with('success', 'Disponibilidad actualizada.');
+    }
+
+    /**
+     * Calendario de reservas por tour (mes por mes, todo el año)
+     */
+    public function reservasCalendario(Request $request, Tour $tour)
+    {
+        $anio = (int) $request->get('anio', now()->year);
+
+        // Todas las reservas de este tour en el año seleccionado
+        $reservas = Reserva::with(['cliente', 'agente'])
+            ->where(function ($q) use ($tour) {
+                $q->whereHas('availability', fn($sq) => $sq->where('tour_id', $tour->id))
+                  ->orWhere(function ($sq) use ($tour) {
+                      // Reservas sin availability_id pero vinculadas al tour por descripcion_servicio (fallback no requerido)
+                  });
+            })
+            ->whereYear('fecha_inicio', $anio)
+            ->whereNotIn('estado_reserva', ['cancelada', 'reembolsada'])
+            ->orderBy('fecha_inicio')
+            ->get();
+
+        // Calcular fecha_fin real para cada reserva
+        $reservas->each(function ($reserva) use ($tour) {
+            if (! $reserva->fecha_fin) {
+                $dias = $tour->duracion_dias ?? 1;
+                $reserva->fecha_fin_calculada = $reserva->fecha_inicio->copy()->addDays($dias - 1);
+            } else {
+                $reserva->fecha_fin_calculada = $reserva->fecha_fin;
+            }
+        });
+
+        // Construir mapa: fecha => [reservas]
+        $mapaFechas = [];
+        foreach ($reservas as $reserva) {
+            $cursor = $reserva->fecha_inicio->copy();
+            $fin    = $reserva->fecha_fin_calculada;
+            while ($cursor->lte($fin)) {
+                $key = $cursor->format('Y-m-d');
+                $mapaFechas[$key][] = $reserva;
+                $cursor->addDay();
+            }
+        }
+
+        // Años disponibles para el selector
+        $aniosDisponibles = collect(range(now()->year - 1, now()->year + 2));
+
+        return view('admin.tours.reservas-calendario', compact(
+            'tour', 'reservas', 'mapaFechas', 'anio', 'aniosDisponibles'
+        ));
     }
 
     /**

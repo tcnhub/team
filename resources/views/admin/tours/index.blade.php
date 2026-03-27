@@ -129,7 +129,7 @@
                                                 <th scope="col">Precio Base</th>
                                                 <th scope="col">Dificultad</th>
                                                 <th scope="col">Estado</th>
-                                                <th scope="col" width="130">Acciones</th>
+                                                <th scope="col" width="160">Acciones</th>
                                             </tr>
                                             </thead>
                                             <tbody>
@@ -181,6 +181,9 @@
                                                         <div class="hstack gap-2">
                                                             <a href="{{ route('admin.tours.show', $tour) }}" class="btn btn-sm btn-soft-info" title="Ver detalle">
                                                                 <i class="ri-eye-line"></i>
+                                                            </a>
+                                                            <a href="{{ route('admin.tours.reservas.calendario', $tour) }}" class="btn btn-sm btn-soft-success" title="Ver reservas en calendario">
+                                                                <i class="ri-calendar-2-line"></i>
                                                             </a>
                                                             <a href="{{ route('admin.tours.edit', $tour) }}" class="btn btn-sm btn-soft-warning" title="Editar">
                                                                 <i class="ri-pencil-line"></i>
