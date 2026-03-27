@@ -42,6 +42,17 @@ class Cliente extends Model
         return $this->belongsTo(Idioma::class);
     }
 
+    /**
+     * Dieta principal asignada directamente (FK dieta_id en clientes)
+     */
+    public function dieta()
+    {
+        return $this->belongsTo(Dieta::class, 'dieta_id');
+    }
+
+    /**
+     * Dietas adicionales vía tabla pivote cliente_dieta
+     */
     public function dietas()
     {
         return $this->belongsToMany(Dieta::class, 'cliente_dieta');
