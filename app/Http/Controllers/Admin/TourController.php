@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
 use App\Models\Categoria;
+use App\Models\Cliente;
+use App\Models\Agente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -16,7 +18,10 @@ class TourController extends Controller
             ->latest()
             ->paginate(15);
 
-        return view('admin.tours.index', compact('tours'));
+        $clientes = Cliente::orderBy('nombre_completo')->get(['id', 'nombre_completo', 'numero_documento']);
+        $agentes  = Agente::where('activo', true)->orderBy('nombre_completo')->get(['id', 'nombre_completo']);
+
+        return view('admin.tours.index', compact('tours', 'clientes', 'agentes'));
     }
 
     public function create()

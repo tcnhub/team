@@ -207,13 +207,7 @@
         </div>
 
         <!-- ── Información Financiera ── -->
-        <div class="col-md-4">
-            <label class="form-label">Moneda</label>
-            <select name="moneda" id="inputMoneda" class="form-select @error('moneda') is-invalid @enderror">
-                <option value="PEN" {{ (isset($reserva) && $reserva->moneda == 'PEN') || old('moneda', 'PEN') == 'PEN' ? 'selected' : '' }}>PEN - Soles</option>
-                <option value="USD" {{ (isset($reserva) && $reserva->moneda == 'USD') || old('moneda') == 'USD' ? 'selected' : '' }}>USD - Dólares</option>
-            </select>
-        </div>
+        <input type="hidden" name="moneda" id="inputMoneda" value="USD">
 
         <div class="col-md-4">
             <label class="form-label">Precio Total <span class="text-danger">*</span></label>
@@ -447,8 +441,6 @@
         const nombre = opt.dataset.nombre ?? '';
         tourDias     = parseInt(opt.dataset.dias) || null;
         const precio = opt.dataset.precio;
-        const moneda = opt.dataset.moneda ?? 'PEN';
-
         // Auto-rellenar tipo y descripción si están vacíos
         if (!inputTipo.value) inputTipo.value = 'Tour';
         if (!inputDesc.value) inputDesc.value = nombre + (tourDias ? ` ${tourDias}D/${Math.max(tourDias-1,1)}N` : '');
@@ -456,8 +448,6 @@
         // Auto-rellenar precio si está vacío
         if (precio && !inputPrecio.value) {
             inputPrecio.value = parseFloat(precio).toFixed(2);
-            // Seleccionar moneda
-            for (let o of inputMoneda.options) { if (o.value === moneda) { o.selected = true; break; } }
         }
 
         // Mostrar badge info

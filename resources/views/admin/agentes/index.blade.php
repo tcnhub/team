@@ -41,7 +41,7 @@
                                 @endif
 
                                 <!-- Filtros -->
-                                <form method="GET" class="mb-3 d-flex gap-2 flex-wrap">
+                                <form method="GET" class="mb-3 d-flex gap-2 flex-wrap" data-auto-filter="true">
                                     <div class="input-group" style="max-width:350px">
                                         <input type="text" name="buscar" class="form-control form-control-sm"
                                                placeholder="Buscar por nombre, email o código..."

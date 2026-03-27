@@ -277,18 +277,12 @@
                     </div>
 
                     {{-- Precio --}}
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">Moneda</label>
-                        <select id="mr_moneda" class="form-select">
-                            <option value="PEN">PEN</option>
-                            <option value="USD">USD</option>
-                        </select>
-                    </div>
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Precio Total <span class="text-danger">*</span></label>
                         <input type="number" step="0.01" id="mr_precio_total" class="form-control" placeholder="0.00" min="0">
                         <div class="invalid-feedback" id="err_mr_precio_total"></div>
                     </div>
+                    <input type="hidden" id="mr_moneda" value="USD">
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Descuento</label>
                         <input type="number" step="0.01" id="mr_descuento" class="form-control" value="0" min="0">
@@ -352,7 +346,7 @@
 const TOUR_ID       = {{ $tour->id }};
 const TOUR_DIAS     = {{ $tour->duracion_dias ?? 'null' }};
 const TOUR_PRECIO   = {{ $tour->precio_base ?? 'null' }};
-const TOUR_MONEDA   = '{{ $tour->moneda ?? 'PEN' }}';
+const TOUR_MONEDA   = 'USD';
 const STORE_URL     = '{{ route('admin.tours.reservas.store-ajax', $tour) }}';
 const CSRF          = document.querySelector('meta[name="csrf-token"]')?.content;
 
