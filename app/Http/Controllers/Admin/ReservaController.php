@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reserva;
 use App\Models\Cliente;
 use App\Models\Agente;
+use App\Models\Pais;
 use App\Models\TourAvailability;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -51,14 +52,15 @@ class ReservaController extends Controller
             ->orderBy('nombre_completo')
             ->get();
 
-        $agentes = Agente::where('estado', 'activo')->get();
+        $agentes        = Agente::where('estado', 'activo')->get();
+        $paises         = Pais::orderBy('nombre')->get();
         $availabilities = TourAvailability::with('tour')
             ->where('disponible', true)
             ->whereDate('fecha', '>=', now()->toDateString())
             ->limit(50)
             ->get();
 
-        return view('admin.reservas.create', compact('clientes', 'agentes', 'availabilities'));
+        return view('admin.reservas.create', compact('clientes', 'agentes', 'paises', 'availabilities'));
     }
 
     /**

@@ -20,19 +20,30 @@
         <!-- Cliente -->
         <div class="col-md-6">
             <label class="form-label">Cliente <span class="text-danger">*</span></label>
-            <select name="id_cliente" class="form-select @error('id_cliente') is-invalid @enderror" required>
-                <option value="">Seleccionar cliente...</option>
-                @foreach($clientes ?? [] as $cliente)
-                    <option value="{{ $cliente->id }}"
-                        {{ (isset($reserva) && $reserva->id_cliente == $cliente->id) || old('id_cliente') == $cliente->id ? 'selected' : '' }}>
-                        {{ $cliente->nombre_completo ?? $cliente->nombre . ' ' . $cliente->apellido }}
-                        ({{ $cliente->numero_documento ?? 'Sin documento' }})
-                    </option>
-                @endforeach
-            </select>
-            @error('id_cliente')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <div class="input-group">
+                <select name="id_cliente" id="selectCliente"
+                        class="form-select @error('id_cliente') is-invalid @enderror" required>
+                    <option value="">Seleccionar cliente...</option>
+                    @foreach($clientes ?? [] as $cliente)
+                        <option value="{{ $cliente->id }}"
+                            {{ (isset($reserva) && $reserva->id_cliente == $cliente->id) || old('id_cliente') == $cliente->id ? 'selected' : '' }}>
+                            {{ $cliente->nombre_completo ?? $cliente->nombre . ' ' . $cliente->apellido }}
+                            ({{ $cliente->numero_documento ?? 'Sin documento' }})
+                        </option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-success" title="Crear nuevo cliente"
+                        data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+                    <i class="ri-user-add-line"></i>
+                </button>
+                @error('id_cliente')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="form-text">
+                <i class="ri-information-line me-1"></i>
+                Si el cliente no está en la lista, usa el botón <strong>+</strong> para registrarlo.
+            </div>
         </div>
 
         <!-- Agente (Opcional) -->
@@ -223,3 +234,195 @@
         <a href="{{ route('admin.reservas.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
     </div>
 </form>
+
+{{-- ── Modal: Crear Nuevo Cliente ── --}}
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="ri-user-add-line me-2"></i>Registrar Nuevo Cliente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div id="modalClienteAlerta" class="d-none"></div>
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" id="mc_nombre"
+                               class="form-control" placeholder="Nombres" required>
+                        <div class="invalid-feedback" id="err_nombre"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Apellido <span class="text-danger">*</span></label>
+                        <input type="text" id="mc_apellido"
+                               class="form-control" placeholder="Apellidos" required>
+                        <div class="invalid-feedback" id="err_apellido"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo Documento <span class="text-danger">*</span></label>
+                        <select id="mc_tipo_documento" class="form-select">
+                            <option value="passport">Passport</option>
+                            <option value="dni">DNI</option>
+                            <option value="id">ID / Otros</option>
+                        </select>
+                        <div class="invalid-feedback" id="err_tipo_documento"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">N° Documento <span class="text-danger">*</span></label>
+                        <input type="text" id="mc_numero_documento"
+                               class="form-control" placeholder="Número de documento">
+                        <div class="invalid-feedback" id="err_numero_documento"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">País</label>
+                        <select id="mc_pais_id" class="form-select">
+                            <option value="">Seleccionar país...</option>
+                            @foreach($paises ?? [] as $pais)
+                                <option value="{{ $pais->id }}">{{ $pais->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="mc_email"
+                               class="form-control" placeholder="correo@ejemplo.com">
+                        <div class="invalid-feedback" id="err_email"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Teléfono / WhatsApp</label>
+                        <input type="text" id="mc_telefono"
+                               class="form-control" placeholder="+51 999 999 999">
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnGuardarCliente">
+                    <span id="btnGuardarClienteSpinner" class="spinner-border spinner-border-sm me-1 d-none"></span>
+                    <i class="ri-save-line me-1"></i>Guardar y Seleccionar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const CSRF       = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
+    const STORE_URL  = '{{ route("admin.clientes.store-quick") }}';
+
+    const fields = ['nombre', 'apellido', 'tipo_documento', 'numero_documento', 'pais_id', 'email', 'telefono'];
+
+    function clearErrors() {
+        fields.forEach(f => {
+            const input = document.getElementById('mc_' + f);
+            if (input) { input.classList.remove('is-invalid'); }
+            const err = document.getElementById('err_' + f);
+            if (err)  { err.textContent = ''; }
+        });
+        document.getElementById('modalClienteAlerta').className = 'd-none';
+    }
+
+    function showFieldError(field, msg) {
+        const input = document.getElementById('mc_' + field);
+        if (input) input.classList.add('is-invalid');
+        const err = document.getElementById('err_' + field);
+        if (err)  err.textContent = msg;
+    }
+
+    document.getElementById('btnGuardarCliente').addEventListener('click', async function () {
+        clearErrors();
+
+        const spinner = document.getElementById('btnGuardarClienteSpinner');
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+
+        const payload = {
+            nombre           : document.getElementById('mc_nombre').value.trim(),
+            apellido         : document.getElementById('mc_apellido').value.trim(),
+            tipo_documento   : document.getElementById('mc_tipo_documento').value,
+            numero_documento : document.getElementById('mc_numero_documento').value.trim(),
+            pais_id          : document.getElementById('mc_pais_id').value || null,
+            email            : document.getElementById('mc_email').value.trim() || null,
+            telefono         : document.getElementById('mc_telefono').value.trim() || null,
+        };
+
+        try {
+            const res  = await fetch(STORE_URL, {
+                method : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept'      : 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                // Errores de validación campo a campo
+                if (res.status === 422 && data.errors) {
+                    Object.entries(data.errors).forEach(([field, msgs]) => {
+                        showFieldError(field, msgs[0]);
+                    });
+                } else {
+                    const alerta = document.getElementById('modalClienteAlerta');
+                    alerta.className = 'alert alert-danger';
+                    alerta.textContent = data.message ?? 'Error al guardar el cliente.';
+                }
+                return;
+            }
+
+            // Agregar al select y seleccionarlo
+            const select = document.getElementById('selectCliente');
+            const option = new Option(
+                data.cliente.nombre_completo + ' (' + data.cliente.numero_documento + ')',
+                data.cliente.id,
+                true,
+                true
+            );
+            select.add(option);
+
+            // Cerrar modal y limpiar
+            bootstrap.Modal.getInstance(document.getElementById('modalNuevoCliente')).hide();
+
+            // Limpiar campos del modal
+            ['mc_nombre','mc_apellido','mc_numero_documento','mc_email','mc_telefono'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('mc_tipo_documento').value = 'passport';
+            document.getElementById('mc_pais_id').value = '';
+
+        } catch (e) {
+            const alerta = document.getElementById('modalClienteAlerta');
+            alerta.className = 'alert alert-danger';
+            alerta.textContent = 'Error de conexión. Intenta nuevamente.';
+        } finally {
+            spinner.classList.add('d-none');
+            document.getElementById('btnGuardarCliente').disabled = false;
+        }
+    });
+
+    // Limpiar errores al abrir el modal
+    document.getElementById('modalNuevoCliente').addEventListener('show.bs.modal', clearErrors);
+})();
+</script>

@@ -55,6 +55,8 @@ Route::prefix('admin')
             Route::resource('clientes', ClienteController::class);
             Route::get('clientes/buscar-documento', [ClienteController::class, 'buscarPorDocumento'])
                 ->name('clientes.buscar-documento');
+            Route::post('clientes/store-quick', [ClienteController::class, 'storeQuick'])
+                ->name('clientes.store-quick');
 
             // ── Catálogos relacionados con clientes ────────────────────────
             Route::resource('dietas', DietaController::class);

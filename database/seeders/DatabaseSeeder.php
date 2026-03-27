@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ProveedorSeeder::class,
             AdminSeeder::class,
             TourSeeder::class,
+            AgenteSeeder::class,
         ]);
     }
 }
