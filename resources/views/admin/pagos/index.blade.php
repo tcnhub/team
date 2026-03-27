@@ -29,7 +29,7 @@
                                 @endif
 
                                 {{-- Filtros --}}
-                                <form method="GET" class="mb-4">
+                                <form method="GET" class="mb-4" data-auto-filter="true">
                                     <div class="row g-2">
                                         <div class="col-md-2">
                                             <input type="text" name="codigo_pago" class="form-control form-control-sm"
@@ -81,11 +81,6 @@
                                             </a>
                                         </div>
                                         <div class="col-md-6 text-end">
-                                            @if($totalPEN > 0)
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 me-2">
-                                                    Total PEN: S/ {{ number_format($totalPEN, 2) }}
-                                                </span>
-                                            @endif
                                             @if($totalUSD > 0)
                                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
                                                     Total USD: $ {{ number_format($totalUSD, 2) }}

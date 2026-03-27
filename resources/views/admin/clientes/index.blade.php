@@ -33,7 +33,7 @@
                             <div class="card-body">
 
                                 <!-- ==================== FILTROS DE BÚSQUEDA ==================== -->
-                                <form method="GET" action="{{ route('admin.clientes.index') }}" class="mb-4">
+                                <form method="GET" action="{{ route('admin.clientes.index') }}" class="mb-4" data-auto-filter="true">
                                     <div class="row g-3">
 
                                         <!-- Búsqueda general -->
