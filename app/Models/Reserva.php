@@ -22,6 +22,8 @@ class Reserva extends Model
         'estado_reserva',
         'id_cliente',
         'id_agente',
+        'tour_id',
+        'availability_id',
         'tipo_reserva',
         'descripcion_servicio',
         'fecha_inicio',
@@ -90,6 +92,14 @@ class Reserva extends Model
     public function agente()
     {
         return $this->belongsTo(Agente::class, 'id_agente');
+    }
+
+    /**
+     * Relación con Tour (tour principal reservado)
+     */
+    public function tour()
+    {
+        return $this->belongsTo(Tour::class, 'tour_id');
     }
 
     /**

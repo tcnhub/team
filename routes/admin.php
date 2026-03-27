@@ -56,6 +56,8 @@ Route::prefix('admin')
 
             // ── Reservas ───────────────────────────────────────────────────
             Route::resource('reservas', ReservaController::class);
+            Route::get('tours/{tour}/availabilities-json', [ReservaController::class, 'availabilitiesPorTour'])
+                ->name('tours.availabilities.json');
 
             // ── Clientes ───────────────────────────────────────────────────
             Route::resource('clientes', ClienteController::class);
