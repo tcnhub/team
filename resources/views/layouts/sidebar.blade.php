@@ -118,6 +118,19 @@
                 </li>
 
                 <li class="nav-item">
+                    <a class="nav-link menu-link" href="#sidebarPagos" data-bs-toggle="collapse" role="button"
+                       aria-expanded="false" aria-controls="sidebarPagos">
+                        <i class="ri-bank-card-line"></i> <span>Pagos</span>
+                    </a>
+                    <div class="collapse menu-dropdown" id="sidebarPagos">
+                        <ul class="nav nav-sm flex-column">
+                            <li class="nav-item"><a href="{{ route('admin.pagos.index')}}" class="nav-link">Lista de Pagos</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.pagos.create')}}" class="nav-link">Registrar Pago</a></li>
+                        </ul>
+                    </div>
+                </li>
+
+                <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarAgentes" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarAgentes">
                         <i class="ri-customer-service-2-line"></i> <span>Agentes</span>

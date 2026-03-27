@@ -258,6 +258,47 @@
             </div>
         @endif
 
+    {{-- ── Pago Inicial (solo en creación) ── --}}
+    @unless(isset($reserva) && $reserva->exists)
+        <div class="col-12 mt-2">
+            <hr class="border-dashed">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="ri-bank-card-line fs-5 text-success"></i>
+                <h6 class="mb-0 fw-semibold">Pago Inicial <span class="text-muted fw-normal small">(opcional)</span></h6>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Monto Inicial</label>
+                    <input type="number" step="0.01" name="pago_inicial_monto" id="inputPagoInicial"
+                           class="form-control" placeholder="0.00" min="0">
+                    <div class="form-text" id="pagoInicialHint"></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Método de Pago</label>
+                    <select name="pago_inicial_metodo" class="form-select">
+                        <option value="">— Seleccionar —</option>
+                        @foreach(\App\Models\Pago::metodosLabel() as $val => $label)
+                            <option value="{{ $val }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">N° Operación / Código</label>
+                    <input type="text" name="pago_inicial_operacion" class="form-control"
+                           placeholder="Código transferencia, Yape...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tipo</label>
+                    <select name="pago_inicial_tipo" class="form-select">
+                        @foreach(\App\Models\Pago::tiposLabel() as $val => $label)
+                            <option value="{{ $val }}" {{ $val === 'inicial' ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+        </div>
+    @endunless
+
     </div>
 
     <div class="mt-4">
@@ -439,6 +480,16 @@
     // Disparar evento change si ya hay un tour seleccionado (modo edición / old())
     if (selectTour.value) {
         selectTour.dispatchEvent(new Event('change'));
+    }
+
+    // Hint de pago inicial: mostrar saldo sugerido al escribir precio
+    const inputPagoInicial = document.getElementById('inputPagoInicial');
+    const pagoHint = document.getElementById('pagoInicialHint');
+    if (inputPrecio && inputPagoInicial && pagoHint) {
+        inputPrecio.addEventListener('input', function() {
+            const precio = parseFloat(this.value) || 0;
+            if (precio > 0) pagoHint.textContent = `Total a pagar: ${precio.toFixed(2)}`;
+        });
     }
 
     // ── Modal: Crear Nuevo Cliente ─────────────────────────────────────────

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pago;
 use App\Models\Reserva;
 use App\Models\Cliente;
 use App\Models\Agente;
@@ -10,6 +11,7 @@ use App\Models\Pais;
 use App\Models\Tour;
 use App\Models\TourAvailability;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -73,24 +75,29 @@ class ReservaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id_cliente'           => 'required|exists:clientes,id',
-            'id_agente'            => 'nullable|exists:agentes,id',
-            'tour_id'              => 'nullable|exists:tours,id',
-            'availability_id'      => 'nullable|exists:tour_availability,id',
-            'tipo_reserva'         => 'required|string|max:50',
-            'descripcion_servicio' => 'nullable|string|max:255',
-            'fecha_inicio'         => 'required|date',
-            'fecha_fin'            => 'nullable|date|after_or_equal:fecha_inicio',
-            'num_pasajeros'        => 'required|integer|min:1',
-            'num_adultos'          => 'required|integer|min:0',
-            'num_ninos'            => 'required|integer|min:0',
-            'num_bebes'            => 'required|integer|min:0',
-            'precio_total'         => 'required|numeric|min:0',
-            'descuento'            => 'nullable|numeric|min:0',
-            'moneda'               => ['required', Rule::in(['PEN', 'USD'])],
-            'notas'                => 'nullable|string',
-            'requisitos_especiales'=> 'nullable|string',
-            'fuente_reserva'       => 'nullable|string|max:50',
+            'id_cliente'              => 'required|exists:clientes,id',
+            'id_agente'               => 'nullable|exists:agentes,id',
+            'tour_id'                 => 'nullable|exists:tours,id',
+            'availability_id'         => 'nullable|exists:tour_availability,id',
+            'tipo_reserva'            => 'required|string|max:50',
+            'descripcion_servicio'    => 'nullable|string|max:255',
+            'fecha_inicio'            => 'required|date',
+            'fecha_fin'               => 'nullable|date|after_or_equal:fecha_inicio',
+            'num_pasajeros'           => 'required|integer|min:1',
+            'num_adultos'             => 'required|integer|min:0',
+            'num_ninos'               => 'required|integer|min:0',
+            'num_bebes'               => 'required|integer|min:0',
+            'precio_total'            => 'required|numeric|min:0',
+            'descuento'               => 'nullable|numeric|min:0',
+            'moneda'                  => ['required', Rule::in(['PEN', 'USD'])],
+            'notas'                   => 'nullable|string',
+            'requisitos_especiales'   => 'nullable|string',
+            'fuente_reserva'          => 'nullable|string|max:50',
+            // Pago inicial (opcional)
+            'pago_inicial_monto'      => 'nullable|numeric|min:0.01',
+            'pago_inicial_metodo'     => 'nullable|string',
+            'pago_inicial_operacion'  => 'nullable|string|max:60',
+            'pago_inicial_tipo'       => 'nullable|string',
         ]);
 
         try {
@@ -122,6 +129,24 @@ class ReservaController extends Controller
                 'fuente_reserva'       => $validated['fuente_reserva'] ?? 'Oficina',
                 'estado_reserva'       => 'pendiente',
             ]);
+
+            // ── Pago inicial ──────────────────────────────────────────────
+            if (!empty($validated['pago_inicial_monto']) && $validated['pago_inicial_monto'] > 0) {
+                Pago::create([
+                    'reserva_id'       => $reserva->id,
+                    'cliente_id'       => $reserva->id_cliente,
+                    'registrado_por'   => Auth::guard('admin')->id(),
+                    'codigo_pago'      => Pago::generarCodigo(),
+                    'monto'            => $validated['pago_inicial_monto'],
+                    'moneda'           => $validated['moneda'],
+                    'tipo_pago'        => $validated['pago_inicial_tipo'] ?? 'inicial',
+                    'metodo_pago'      => $validated['pago_inicial_metodo'] ?? 'efectivo',
+                    'numero_operacion' => $validated['pago_inicial_operacion'] ?? null,
+                    'fecha_pago'       => now()->toDateString(),
+                    'estado'           => 'confirmado',
+                ]);
+                Pago::recalcularMontoPagado($reserva->id);
+            }
 
             DB::commit();
 
@@ -243,6 +268,103 @@ class ReservaController extends Controller
         return redirect()
             ->route('admin.reservas.index')
             ->with('success', 'Reserva eliminada correctamente');
+    }
+
+    /**
+     * AJAX: crea una reserva desde el calendario de tour y devuelve JSON
+     */
+    public function storeAjax(Request $request, Tour $tour)
+    {
+        $validated = $request->validate([
+            'id_cliente'    => 'required|exists:clientes,id',
+            'id_agente'     => 'nullable|exists:agentes,id',
+            'fecha_inicio'  => 'required|date',
+            'fecha_fin'     => 'nullable|date|after_or_equal:fecha_inicio',
+            'num_pasajeros' => 'required|integer|min:1',
+            'num_adultos'   => 'required|integer|min:0',
+            'num_ninos'     => 'required|integer|min:0',
+            'num_bebes'     => 'required|integer|min:0',
+            'precio_total'  => 'required|numeric|min:0',
+            'descuento'     => 'nullable|numeric|min:0',
+            'moneda'        => ['required', Rule::in(['PEN', 'USD'])],
+            'notas'         => 'nullable|string',
+            'fuente_reserva'=> 'nullable|string|max:50',
+            // Pago inicial
+            'pago_inicial_monto'     => 'nullable|numeric|min:0.01',
+            'pago_inicial_metodo'    => 'nullable|string',
+            'pago_inicial_operacion' => 'nullable|string|max:60',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $precioFinal = $validated['precio_total'] - ($validated['descuento'] ?? 0);
+
+            $reserva = Reserva::create([
+                'codigo_reserva'    => $this->generarCodigoReserva(),
+                'id_cliente'        => $validated['id_cliente'],
+                'id_agente'         => $validated['id_agente'] ?? null,
+                'tour_id'           => $tour->id,
+                'tipo_reserva'      => 'Tour',
+                'descripcion_servicio' => $tour->nombre_tour . ($tour->duracion_dias ? " {$tour->duracion_dias}D" : ''),
+                'fecha_inicio'      => $validated['fecha_inicio'],
+                'fecha_fin'         => $validated['fecha_fin'],
+                'num_pasajeros'     => $validated['num_pasajeros'],
+                'num_adultos'       => $validated['num_adultos'],
+                'num_ninos'         => $validated['num_ninos'],
+                'num_bebes'         => $validated['num_bebes'],
+                'moneda'            => $validated['moneda'],
+                'precio_total'      => $validated['precio_total'],
+                'descuento'         => $validated['descuento'] ?? 0,
+                'precio_final'      => $precioFinal,
+                'monto_pagado'      => 0,
+                'notas'             => $validated['notas'],
+                'fuente_reserva'    => $validated['fuente_reserva'] ?? 'Oficina',
+                'estado_reserva'    => 'pendiente',
+            ]);
+
+            if (!empty($validated['pago_inicial_monto']) && $validated['pago_inicial_monto'] > 0) {
+                Pago::create([
+                    'reserva_id'       => $reserva->id,
+                    'cliente_id'       => $reserva->id_cliente,
+                    'registrado_por'   => Auth::guard('admin')->id(),
+                    'codigo_pago'      => Pago::generarCodigo(),
+                    'monto'            => $validated['pago_inicial_monto'],
+                    'moneda'           => $validated['moneda'],
+                    'tipo_pago'        => 'inicial',
+                    'metodo_pago'      => $validated['pago_inicial_metodo'] ?? 'efectivo',
+                    'numero_operacion' => $validated['pago_inicial_operacion'] ?? null,
+                    'fecha_pago'       => $validated['fecha_inicio'],
+                    'estado'           => 'confirmado',
+                ]);
+                Pago::recalcularMontoPagado($reserva->id);
+            }
+
+            DB::commit();
+
+            $reserva->load('cliente');
+            $fechaFin = $reserva->fecha_fin
+                ?? $reserva->fecha_inicio->copy()->addDays(($tour->duracion_dias ?? 1) - 1);
+
+            return response()->json([
+                'ok'      => true,
+                'reserva' => [
+                    'id'             => $reserva->id,
+                    'codigo_reserva' => $reserva->codigo_reserva,
+                    'fecha_inicio'   => $reserva->fecha_inicio->format('Y-m-d'),
+                    'fecha_fin'      => $fechaFin instanceof \Carbon\Carbon
+                        ? $fechaFin->format('Y-m-d')
+                        : \Carbon\Carbon::parse($fechaFin)->format('Y-m-d'),
+                    'cliente_nombre' => $reserva->cliente->nombre_completo ?? $reserva->codigo_reserva,
+                    'estado'         => $reserva->estado_reserva,
+                    'show_url'       => route('admin.reservas.show', $reserva),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
     }
 
     /**

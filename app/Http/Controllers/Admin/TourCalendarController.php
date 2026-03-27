@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Agente;
+use App\Models\Cliente;
 use App\Models\Reserva;
 use App\Models\Tour;
 use App\Models\TourCalendarYear;
@@ -201,8 +203,12 @@ class TourCalendarController extends Controller
         // Años disponibles para el selector
         $aniosDisponibles = collect(range(now()->year - 1, now()->year + 2));
 
+        // Para el modal de nueva reserva
+        $clientes = Cliente::where('activo', true)->orderBy('nombre_completo')->get(['id', 'nombre_completo', 'numero_documento']);
+        $agentes  = Agente::where('estado', 'activo')->get(['id', 'nombres', 'apellidos']);
+
         return view('admin.tours.reservas-calendario', compact(
-            'tour', 'reservas', 'mapaFechas', 'anio', 'aniosDisponibles'
+            'tour', 'reservas', 'mapaFechas', 'anio', 'aniosDisponibles', 'clientes', 'agentes'
         ));
     }
 
