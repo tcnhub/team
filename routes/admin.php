@@ -42,6 +42,12 @@ Route::prefix('admin')
                 Route::patch('{calendar}/days/{availability}', [TourCalendarController::class, 'updateDay'])->name('days.update');
             });
 
+            // Calendario de reservas por tour
+            Route::get(
+                'tours/{tour}/reservas-calendario',
+                [TourCalendarController::class, 'reservasCalendario']
+            )->name('tours.reservas.calendario');
+
             // AJAX: actualización rápida de un día (desde la grilla de calendario)
             Route::patch(
                 'tours/{tour}/availability/{availability}',

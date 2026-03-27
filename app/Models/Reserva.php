@@ -93,6 +93,14 @@ class Reserva extends Model
     }
 
     /**
+     * Relación con TourAvailability (fecha/día específico del tour)
+     */
+    public function availability()
+    {
+        return $this->belongsTo(TourAvailability::class, 'availability_id');
+    }
+
+    /**
      * Relación con Pagos (una reserva puede tener muchos pagos)
      */
     public function pagos()
