@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             TourSeeder::class,
             AgenteSeeder::class,
+            ClienteSeeder::class,
         ]);
     }
 }
