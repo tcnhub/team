@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DietaController;
 use App\Http\Controllers\Admin\IdiomaController;
+use App\Http\Controllers\Admin\PagoController;
 use App\Http\Controllers\Admin\PaisController;
 use App\Http\Controllers\Admin\ReservaController;
 use App\Http\Controllers\Admin\TourAvailabilityController;
@@ -42,11 +43,16 @@ Route::prefix('admin')
                 Route::patch('{calendar}/days/{availability}', [TourCalendarController::class, 'updateDay'])->name('days.update');
             });
 
-            // Calendario de reservas por tour
+            // Calendario de reservas por tour + AJAX store
             Route::get(
                 'tours/{tour}/reservas-calendario',
                 [TourCalendarController::class, 'reservasCalendario']
             )->name('tours.reservas.calendario');
+
+            Route::post(
+                'tours/{tour}/reservas-ajax',
+                [ReservaController::class, 'storeAjax']
+            )->name('tours.reservas.store-ajax');
 
             // AJAX: actualización rápida de un día (desde la grilla de calendario)
             Route::patch(
@@ -78,6 +84,9 @@ Route::prefix('admin')
 
             // ── Agentes ────────────────────────────────────────────────────
             Route::resource('agentes', AgenteController::class);
+
+            // ── Pagos ──────────────────────────────────────────────────────
+            Route::resource('pagos', PagoController::class);
 
             // ── Categorías de Tours ────────────────────────────────────────
             Route::resource('categorias', CategoriaController::class);

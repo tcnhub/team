@@ -602,10 +602,8 @@ return new class extends Migration
             $table->enum('estado', ['pendiente', 'confirmado', 'rechazado', 'devuelto'])
                 ->default('confirmado');
 
-            $table->foreignId('registrado_por')
-                ->nullable()
-                ->constrained('users')
-                ->onDelete('set null');
+            $table->unsignedBigInteger('registrado_por')->nullable();
+            $table->foreign('registrado_por')->references('id')->on('admins')->onDelete('set null');
 
             $table->text('notas')->nullable();
 
