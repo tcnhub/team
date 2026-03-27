@@ -61,8 +61,9 @@
         <div class="col-md-3">
             <label class="form-label">Estado</label>
             <div class="form-check form-switch mt-2">
-                <input type="checkbox" name="activo" id="activo" class="form-check-input"
-                       {{ (isset($categoria) && $categoria->activo) || (!isset($categoria) && old('activo', true)) ? 'checked' : '' }}>
+                <input type="hidden" name="activo" value="0">
+                <input type="checkbox" name="activo" id="activo" value="1" class="form-check-input"
+                       {{ (isset($categoria) ? $categoria->activo : old('activo', true)) ? 'checked' : '' }}>
                 <label class="form-check-label" for="activo">Categoría Activa</label>
             </div>
         </div>
