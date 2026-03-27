@@ -89,7 +89,7 @@ class ReservaController extends Controller
             'num_bebes'               => 'required|integer|min:0',
             'precio_total'            => 'required|numeric|min:0',
             'descuento'               => 'nullable|numeric|min:0',
-            'moneda'                  => ['required', Rule::in(['PEN', 'USD'])],
+            'moneda'                  => ['required', Rule::in(['USD'])],
             'notas'                   => 'nullable|string',
             'requisitos_especiales'   => 'nullable|string',
             'fuente_reserva'          => 'nullable|string|max:50',
@@ -286,7 +286,7 @@ class ReservaController extends Controller
             'num_bebes'     => 'required|integer|min:0',
             'precio_total'  => 'required|numeric|min:0',
             'descuento'     => 'nullable|numeric|min:0',
-            'moneda'        => ['required', Rule::in(['PEN', 'USD'])],
+            'moneda'        => ['required', Rule::in(['USD'])],
             'notas'         => 'nullable|string',
             'fuente_reserva'=> 'nullable|string|max:50',
             // Pago inicial

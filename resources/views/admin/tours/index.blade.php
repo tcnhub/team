@@ -41,7 +41,7 @@
                             <div class="card-body">
 
                                 <!-- ==================== FILTROS DE BÚSQUEDA ==================== -->
-                                <form method="GET" action="{{ route('admin.tours.index') }}" class="mb-4">
+                                <form method="GET" action="{{ route('admin.tours.index') }}" class="mb-4" data-auto-filter="true">
                                     <div class="row g-3">
 
                                         <!-- Código -->
@@ -150,7 +150,7 @@
                                                     </td>
                                                     <td>
                                                         @if($tour->precio_base)
-                                                            <strong>S/ {{ number_format($tour->precio_base, 2) }}</strong>
+                                                            <strong>$ {{ number_format($tour->precio_base, 2) }}</strong>
                                                         @else
                                                             —
                                                         @endif
@@ -182,6 +182,17 @@
                                                             <a href="{{ route('admin.tours.show', $tour) }}" class="btn btn-sm btn-soft-info" title="Ver detalle">
                                                                 <i class="ri-eye-line"></i>
                                                             </a>
+                                                            <button type="button"
+                                                                    class="btn btn-sm btn-soft-primary btn-nueva-reserva"
+                                                                    title="Nueva Reserva"
+                                                                    data-tour-id="{{ $tour->id }}"
+                                                                    data-tour-nombre="{{ $tour->nombre_tour }}"
+                                                                    data-tour-precio="{{ $tour->precio_base ?? '' }}"
+                                                                    data-tour-dias="{{ $tour->duracion_dias ?? '' }}"
+                                                                    data-calendario-url="{{ route('admin.tours.reservas.calendario', $tour) }}"
+                                                                    data-ajax-url="{{ route('admin.tours.reservas.store-ajax', $tour) }}">
+                                                                <i class="ri-calendar-check-line"></i>
+                                                            </button>
                                                             <a href="{{ route('admin.tours.reservas.calendario', $tour) }}" class="btn btn-sm btn-soft-success" title="Ver reservas en calendario">
                                                                 <i class="ri-calendar-2-line"></i>
                                                             </a>
@@ -238,6 +249,123 @@
     </div>
 </div>
 
+{{-- ── Modal: Nueva Reserva desde Tours Index ───────────────────────────────── --}}
+<div class="modal fade" id="modalNuevaReservaTour" tabindex="-1" aria-labelledby="modalNRTLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalNRTLabel">
+                    <i class="ri-calendar-check-line me-1"></i>
+                    Nueva Reserva — <span id="nrtTourNombre"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="nrtAlertError" class="alert alert-danger d-none"></div>
+                <div class="row g-3">
+                    {{-- Cliente --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
+                        <select id="nrt_cliente" class="form-select">
+                            <option value="">— Seleccionar cliente —</option>
+                            @foreach($clientes as $c)
+                                <option value="{{ $c->id }}">{{ $c->nombre_completo }} ({{ $c->numero_documento }})</option>
+                            @endforeach
+                        </select>
+                        <div class="invalid-feedback" id="err_nrt_cliente"></div>
+                    </div>
+                    {{-- Agente --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Agente</label>
+                        <select id="nrt_agente" class="form-select">
+                            <option value="">— Sin agente —</option>
+                            @foreach($agentes as $a)
+                                <option value="{{ $a->id }}">{{ $a->nombre_completo }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- Fecha Inicio --}}
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Fecha Inicio <span class="text-danger">*</span></label>
+                        <input type="date" id="nrt_fecha_inicio" class="form-control">
+                        <div class="invalid-feedback" id="err_nrt_fecha_inicio"></div>
+                    </div>
+                    {{-- Fecha Fin --}}
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Fecha Fin</label>
+                        <input type="date" id="nrt_fecha_fin" class="form-control">
+                    </div>
+                    {{-- Pasajeros --}}
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Pasajeros</label>
+                        <input type="number" id="nrt_num_pasajeros" class="form-control" value="1" min="1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Adultos</label>
+                        <input type="number" id="nrt_num_adultos" class="form-control" value="1" min="0">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Niños</label>
+                        <input type="number" id="nrt_num_ninos" class="form-control" value="0" min="0">
+                    </div>
+                    {{-- Precio --}}
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Precio Total (USD) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" id="nrt_precio_total" class="form-control" placeholder="0.00" min="0">
+                        <div class="invalid-feedback" id="err_nrt_precio_total"></div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Descuento</label>
+                        <input type="number" step="0.01" id="nrt_descuento" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Fuente</label>
+                        <select id="nrt_fuente" class="form-select">
+                            @foreach(['Oficina','Web','WhatsApp','Email','Teléfono','Referido','Otro'] as $f)
+                                <option value="{{ $f }}">{{ $f }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    {{-- Notas --}}
+                    <div class="col-12">
+                        <label class="form-label">Notas</label>
+                        <textarea id="nrt_notas" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
+                    </div>
+                    {{-- Pago Inicial --}}
+                    <div class="col-12">
+                        <hr class="my-1">
+                        <h6 class="text-muted mb-2"><i class="ri-money-dollar-circle-line me-1"></i>Pago Inicial (opcional)</h6>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Monto</label>
+                        <input type="number" step="0.01" id="nrt_pago_monto" class="form-control" placeholder="0.00" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Método de Pago</label>
+                        <select id="nrt_pago_metodo" class="form-select">
+                            <option value="">— Método —</option>
+                            @foreach(\App\Models\Pago::metodosLabel() as $val => $label)
+                                <option value="{{ $val }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">N° Operación</label>
+                        <input type="text" id="nrt_pago_operacion" class="form-control" placeholder="Código Yape, N° transferencia...">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarNRT">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="nrtSpinner"></span>
+                    <i class="ri-save-line me-1"></i> Guardar Reserva
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @include('layouts.customizer')
 @include('layouts.vendor-scripts')
 
@@ -247,6 +375,113 @@
 <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
 <script src="{{ asset('assets/js/pages/dashboard-ecommerce.init.js') }}"></script>
 <script src="{{ asset('assets/js/app.js') }}"></script>
+
+<script>
+(function () {
+    const CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
+    let currentAjaxUrl    = '';
+    let currentCalendario = '';
+
+    // Open modal when clicking "Nueva Reserva"
+    document.querySelectorAll('.btn-nueva-reserva').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const tourId     = this.dataset.tourId;
+            const tourNombre = this.dataset.tourNombre;
+            const precio     = this.dataset.tourPrecio;
+            const dias       = parseInt(this.dataset.tourDias) || 0;
+
+            currentAjaxUrl    = this.dataset.ajaxUrl;
+            currentCalendario = this.dataset.calendarioUrl;
+
+            // Reset form
+            document.getElementById('nrtTourNombre').textContent = tourNombre;
+            document.getElementById('nrt_cliente').value        = '';
+            document.getElementById('nrt_agente').value         = '';
+            document.getElementById('nrt_fecha_inicio').value   = '';
+            document.getElementById('nrt_fecha_fin').value      = '';
+            document.getElementById('nrt_num_pasajeros').value  = 1;
+            document.getElementById('nrt_num_adultos').value    = 1;
+            document.getElementById('nrt_num_ninos').value      = 0;
+            document.getElementById('nrt_precio_total').value   = precio ? parseFloat(precio).toFixed(2) : '';
+            document.getElementById('nrt_descuento').value      = 0;
+            document.getElementById('nrt_notas').value          = '';
+            document.getElementById('nrt_pago_monto').value     = '';
+            document.getElementById('nrt_pago_metodo').value    = '';
+            document.getElementById('nrt_pago_operacion').value = '';
+            document.getElementById('nrtAlertError').classList.add('d-none');
+
+            // Auto-calc fecha_fin when fecha_inicio changes
+            const fi = document.getElementById('nrt_fecha_inicio');
+            fi.oninput = function () {
+                if (dias && this.value) {
+                    const d = new Date(this.value + 'T00:00:00');
+                    d.setDate(d.getDate() + dias - 1);
+                    document.getElementById('nrt_fecha_fin').value = d.toISOString().slice(0, 10);
+                }
+            };
+
+            new bootstrap.Modal(document.getElementById('modalNuevaReservaTour')).show();
+        });
+    });
+
+    // Save reservation via AJAX
+    document.getElementById('btnGuardarNRT').addEventListener('click', async function () {
+        const spinner = document.getElementById('nrtSpinner');
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+        document.getElementById('nrtAlertError').classList.add('d-none');
+
+        const payload = {
+            id_cliente            : document.getElementById('nrt_cliente').value,
+            id_agente             : document.getElementById('nrt_agente').value || null,
+            fecha_inicio          : document.getElementById('nrt_fecha_inicio').value,
+            fecha_fin             : document.getElementById('nrt_fecha_fin').value || null,
+            num_pasajeros         : document.getElementById('nrt_num_pasajeros').value,
+            num_adultos           : document.getElementById('nrt_num_adultos').value,
+            num_ninos             : document.getElementById('nrt_num_ninos').value,
+            num_bebes             : 0,
+            moneda                : 'USD',
+            precio_total          : document.getElementById('nrt_precio_total').value,
+            descuento             : document.getElementById('nrt_descuento').value || 0,
+            notas                 : document.getElementById('nrt_notas').value || null,
+            fuente_reserva        : document.getElementById('nrt_fuente').value,
+            pago_inicial_monto    : document.getElementById('nrt_pago_monto').value || null,
+            pago_inicial_metodo   : document.getElementById('nrt_pago_metodo').value || null,
+            pago_inicial_operacion: document.getElementById('nrt_pago_operacion').value || null,
+        };
+
+        try {
+            const res = await fetch(currentAjaxUrl, {
+                method : 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body   : JSON.stringify(payload),
+            });
+
+            const data = await res.json();
+
+            if (data.ok) {
+                bootstrap.Modal.getInstance(document.getElementById('modalNuevaReservaTour')).hide();
+                // Redirect to tour calendar
+                window.location.href = currentCalendario;
+            } else {
+                let msg = data.message || 'Error al guardar la reserva.';
+                if (data.errors) {
+                    msg = Object.values(data.errors).flat().join('<br>');
+                }
+                const alertEl = document.getElementById('nrtAlertError');
+                alertEl.innerHTML = msg;
+                alertEl.classList.remove('d-none');
+            }
+        } catch (e) {
+            document.getElementById('nrtAlertError').textContent = 'Error de conexión. Intente nuevamente.';
+            document.getElementById('nrtAlertError').classList.remove('d-none');
+        } finally {
+            spinner.classList.add('d-none');
+            document.getElementById('btnGuardarNRT').disabled = false;
+        }
+    });
+})();
+</script>
 
 <script>
     // Confirmación de eliminación

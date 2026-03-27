@@ -40,7 +40,7 @@
                                     </div>
                                 @endif
 
-                                <form method="GET" class="mb-3">
+                                <form method="GET" class="mb-3" data-auto-filter="true">
                                     <div class="input-group" style="max-width:380px">
                                         <input type="text" name="buscar" class="form-control form-control-sm"
                                                placeholder="Buscar categoría..."

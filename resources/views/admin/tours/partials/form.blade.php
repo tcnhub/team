@@ -35,7 +35,7 @@
 
         <!-- Precio Base -->
         <div class="col-md-3">
-            <label class="form-label">Precio Base (S/)</label>
+            <label class="form-label">Precio Base (USD)</label>
             <input type="number" step="0.01" name="precio_base" class="form-control" value="{{ old('precio_base') }}">
         </div>
 

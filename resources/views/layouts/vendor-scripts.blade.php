@@ -8,3 +8,21 @@
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script src="{{ asset('assets/libs/choices.js/public/assets/scripts/choices.min.js') }}"></script>
 <script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
+
+<script>
+// Auto-filter: forms with data-auto-filter submit on select change or text/date input (debounced)
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-auto-filter]').forEach(function (form) {
+        var timer;
+        form.querySelectorAll('select').forEach(function (sel) {
+            sel.addEventListener('change', function () { form.submit(); });
+        });
+        form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(function (inp) {
+            inp.addEventListener('input', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () { form.submit(); }, 600);
+            });
+        });
+    });
+});
+</script>

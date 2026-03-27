@@ -33,7 +33,7 @@
                             <div class="card-body">
 
                                 <!-- ==================== FILTROS DE BÚSQUEDA ==================== -->
-                                <form method="GET" action="{{ route('admin.reservas.index') }}" class="mb-4">
+                                <form method="GET" action="{{ route('admin.reservas.index') }}" class="mb-4" data-auto-filter="true">
                                     <div class="row g-3">
 
                                         <!-- Código de Reserva -->
@@ -155,7 +155,7 @@
                                                     </td>
                                                     <td>
                                                         <strong>
-                                                            {{ $reserva->moneda }} {{ number_format($reserva->precio_final, 2) }}
+                                                            USD {{ number_format($reserva->precio_final, 2) }}
                                                         </strong>
                                                         @if($reserva->descuento > 0)
                                                             <br>

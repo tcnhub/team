@@ -82,14 +82,7 @@
         <div class="form-text" id="montoHint"></div>
     </div>
 
-    {{-- ── Moneda ── --}}
-    <div class="col-md-2">
-        <label class="form-label fw-semibold">Moneda</label>
-        <select name="moneda" class="form-select @error('moneda') is-invalid @enderror">
-            <option value="PEN" {{ ($editando && $pago->moneda === 'PEN') || old('moneda', 'PEN') === 'PEN' ? 'selected' : '' }}>PEN</option>
-            <option value="USD" {{ ($editando && $pago->moneda === 'USD') || old('moneda') === 'USD' ? 'selected' : '' }}>USD</option>
-        </select>
-    </div>
+    <input type="hidden" name="moneda" value="USD">
 
     {{-- ── Tipo de Pago ── --}}
     <div class="col-md-3">
@@ -192,7 +185,7 @@ function cargarSaldoReserva(reservaId) {
         const saldo   = parseFloat(opt.dataset.saldo  ?? 0);
         const precio  = parseFloat(opt.dataset.precio ?? 0);
         const pagado  = parseFloat(opt.dataset.pagado ?? 0);
-        const moneda  = opt.dataset.moneda ?? 'PEN';
+        const moneda  = opt.dataset.moneda ?? 'USD';
         const pct     = precio > 0 ? Math.min(100, Math.round((pagado / precio) * 100)) : 0;
 
         if (content) {

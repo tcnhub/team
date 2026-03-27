@@ -52,10 +52,9 @@ class PagoController extends Controller
 
         $pagos = $query->paginate(20);
 
-        $totalPEN = (clone $query)->where('moneda', 'PEN')->where('estado', 'confirmado')->sum('monto');
-        $totalUSD = (clone $query)->where('moneda', 'USD')->where('estado', 'confirmado')->sum('monto');
+        $totalUSD = (clone $query)->where('estado', 'confirmado')->sum('monto');
 
-        return view('admin.pagos.index', compact('pagos', 'totalPEN', 'totalUSD'));
+        return view('admin.pagos.index', compact('pagos', 'totalUSD'));
     }
 
     public function create(Request $request)
@@ -79,7 +78,7 @@ class PagoController extends Controller
         $validated = $request->validate([
             'reserva_id'       => 'required|exists:reservas,id',
             'monto'            => 'required|numeric|min:0.01',
-            'moneda'           => ['required', Rule::in(['PEN', 'USD'])],
+            'moneda'           => ['required', Rule::in(['USD'])],
             'tipo_pago'        => ['required', Rule::in(['inicial', 'parcial', 'final', 'proveedor', 'devolucion', 'otro'])],
             'metodo_pago'      => ['required', Rule::in(array_keys(Pago::metodosLabel()))],
             'numero_operacion' => 'nullable|string|max:60',
@@ -168,7 +167,7 @@ class PagoController extends Controller
     {
         $validated = $request->validate([
             'monto'            => 'required|numeric|min:0.01',
-            'moneda'           => ['required', Rule::in(['PEN', 'USD'])],
+            'moneda'           => ['required', Rule::in(['USD'])],
             'tipo_pago'        => ['required', Rule::in(['inicial', 'parcial', 'final', 'proveedor', 'devolucion', 'otro'])],
             'metodo_pago'      => ['required', Rule::in(array_keys(Pago::metodosLabel()))],
             'numero_operacion' => 'nullable|string|max:60',
