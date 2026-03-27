@@ -343,6 +343,61 @@
                             @endif
                         </div>
 
+                        {{-- Pagos de la reserva --}}
+                        <div class="card mt-3">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-bank-card-line me-2 text-success"></i>Pagos
+                                    <span class="badge bg-secondary ms-1">{{ $reserva->pagos->count() }}</span>
+                                </h5>
+                                <a href="{{ route('admin.pagos.create', ['reserva_id' => $reserva->id]) }}"
+                                   class="btn btn-sm btn-success">
+                                    <i class="ri-add-line"></i> Agregar
+                                </a>
+                            </div>
+                            @if($reserva->pagos->isNotEmpty())
+                                <div class="card-body p-0">
+                                    <table class="table table-sm mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3">Código</th>
+                                            <th>Fecha</th>
+                                            <th>Monto</th>
+                                            <th>Método</th>
+                                            <th>Estado</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        @foreach($reserva->pagos as $pago)
+                                            <tr>
+                                                <td class="ps-3">
+                                                    <a href="{{ route('admin.pagos.show', $pago) }}" class="small fw-semibold">
+                                                        {{ $pago->codigo_pago }}
+                                                    </a>
+                                                </td>
+                                                <td><small>{{ $pago->fecha_pago->format('d/m/Y') }}</small></td>
+                                                <td>
+                                                    <strong class="{{ $pago->tipo_pago === 'devolucion' ? 'text-danger' : 'text-success' }}">
+                                                        {{ $pago->moneda }} {{ number_format($pago->monto, 2) }}
+                                                    </strong>
+                                                </td>
+                                                <td><small>{{ $pago->metodo_texto }}</small></td>
+                                                <td>
+                                                    @php $sc = match($pago->estado) { 'confirmado'=>'bg-success','pendiente'=>'bg-warning','rechazado'=>'bg-danger', default=>'bg-secondary' }; @endphp
+                                                    <span class="badge {{ $sc }}">{{ ucfirst($pago->estado) }}</span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="card-body py-3 text-center text-muted">
+                                    <small>Sin pagos registrados</small>
+                                </div>
+                            @endif
+                        </div>
+
                         {{-- Acciones rápidas --}}
                         <div class="card mt-3">
                             <div class="card-body d-grid gap-2">
