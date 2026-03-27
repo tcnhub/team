@@ -35,7 +35,7 @@
                             <div class="card-header align-items-center d-flex">
                                 <h4 class="card-title mb-0 flex-grow-1">Editar Tour</h4>
                                 <div class="flex-shrink-0">
-                                    <a href="{{ route('tours.index') }}" class="btn btn-secondary btn-sm">
+                                    <a href="{{ route('admin.tours.index') }}" class="btn btn-secondary btn-sm">
                                         <i class="ri-arrow-left-line align-middle"></i> Volver a la lista
                                     </a>
                                 </div>

@@ -172,6 +172,36 @@ class ClienteController extends Controller
     }
 
     /**
+     * Crear cliente rápido vía AJAX (desde modal en reservas)
+     */
+    public function storeQuick(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre'           => 'required|string|max:255',
+            'apellido'         => 'required|string|max:255',
+            'tipo_documento'   => ['required', Rule::in(['passport', 'dni', 'id'])],
+            'numero_documento' => 'required|string|unique:clientes,numero_documento',
+            'email'            => 'nullable|email|unique:clientes,email',
+            'telefono'         => 'nullable|string|max:20',
+            'pais_id'          => 'nullable|exists:paises,id',
+        ]);
+
+        $validated['nombre_completo'] = trim($validated['nombre'] . ' ' . $validated['apellido']);
+        $validated['activo']          = true;
+
+        $cliente = Cliente::create($validated);
+
+        return response()->json([
+            'ok'      => true,
+            'cliente' => [
+                'id'              => $cliente->id,
+                'nombre_completo' => $cliente->nombre_completo,
+                'numero_documento'=> $cliente->numero_documento,
+            ],
+        ]);
+    }
+
+    /**
      * Método adicional: Buscar cliente por documento (útil para AJAX en reservas)
      */
     public function buscarPorDocumento(Request $request)
