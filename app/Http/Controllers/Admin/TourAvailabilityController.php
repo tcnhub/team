@@ -4,32 +4,36 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tour;
+use App\Models\TourAvailability;
 use Illuminate\Http\Request;
 
 class TourAvailabilityController extends Controller
 {
-    public function index(Tour $tour)
+    /**
+     * Actualización rápida vía AJAX desde la grilla de calendario.
+     * Recibe "disponibles_deseados" (espacios que el admin quiere dejar libres)
+     * y calcula espacios_bloqueados = capacidad - usados - disponibles_deseados.
+     */
+    public function update(Request $request, Tour $tour, TourAvailability $availability)
     {
-        $tour->load(['calendarYears', 'availability']);
-        return view('admin.tours.availability.index', compact('tour'));
-    }
+        abort_unless($availability->tour_id === $tour->id, 404);
 
-    public function store(Request $request, Tour $tour)
-    {
+        $maxDisponibles = $availability->capacidad_dia - $availability->espacios_usados;
+
         $validated = $request->validate([
-            'fecha'           => 'required|date|after_or_equal:today',
-            'capacidad_dia'   => 'required|integer|min:1',
-            'espacios_bloqueados' => 'nullable|integer|min:0',
+            'disponibles_deseados' => "required|integer|min:0|max:{$maxDisponibles}",
         ]);
 
-        // Aquí puedes crear o actualizar la disponibilidad
-        // (lógica más avanzada se puede expandir después)
+        $bloqueados = $maxDisponibles - $validated['disponibles_deseados'];
+        $availability->update(['espacios_bloqueados' => $bloqueados]);
+        $availability->refresh();
 
-        return back()->with('success', 'Disponibilidad actualizada.');
-    }
-
-    public function update(Request $request, Tour $tour, $availability)
-    {
-        // Lógica para actualizar un día específico
+        return response()->json([
+            'ok'                   => true,
+            'espacios_disponibles' => $availability->espacios_disponibles,
+            'espacios_bloqueados'  => $availability->espacios_bloqueados,
+            'espacios_usados'      => $availability->espacios_usados,
+            'disponible'           => $availability->disponible,
+        ]);
     }
 }

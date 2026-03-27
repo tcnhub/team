@@ -1,10 +1,17 @@
 <?php
 
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
+use App\Http\Controllers\Admin\AgenteController;
+use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\DietaController;
+use App\Http\Controllers\Admin\IdiomaController;
+use App\Http\Controllers\Admin\PaisController;
 use App\Http\Controllers\Admin\ReservaController;
-use App\Http\Controllers\Admin\TourController;   // ← Añade esta línea
+use App\Http\Controllers\Admin\TourAvailabilityController;
+use App\Http\Controllers\Admin\TourCalendarController;
+use App\Http\Controllers\Admin\TourController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -22,17 +29,47 @@ Route::prefix('admin')
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
             Route::post('/logout', [AdminLoginController::class, 'destroy'])->name('logout');
 
-            // Resource para Tours
+            // ── Tours ──────────────────────────────────────────────────────
             Route::resource('tours', TourController::class);
-            Route::resource('reservas', ReservaController::class);
-            Route::resource('clientes', ClienteController::class);
-            Route::resource('dietas', ClienteController::class);
-            Route::resource('idiomas', ClienteController::class);
-            Route::resource('paises', ClienteController::class);
 
-            // para busqueda de clienates por documento
-            Route::get('clientes/buscar-documento', [ClienteController::class, 'buscarPorDocumento'])->name('clientes.buscar-documento');
-            Route::get('paises/buscar', [PaisController::class, 'buscar'])->name('paises.buscar');
+            // Calendario de disponibilidad por tour
+            Route::prefix('tours/{tour}/calendar')->name('tours.calendar.')->group(function () {
+                Route::get('create', [TourCalendarController::class, 'create'])->name('create');
+                Route::post('/', [TourCalendarController::class, 'store'])->name('store');
+                Route::get('{calendar}', [TourCalendarController::class, 'show'])->name('show');
+                Route::delete('{calendar}', [TourCalendarController::class, 'destroy'])->name('destroy');
+                Route::post('{calendar}/bulk', [TourCalendarController::class, 'bulkUpdate'])->name('bulk');
+                Route::patch('{calendar}/days/{availability}', [TourCalendarController::class, 'updateDay'])->name('days.update');
+            });
+
+            // AJAX: actualización rápida de un día (desde la grilla de calendario)
+            Route::patch(
+                'tours/{tour}/availability/{availability}',
+                [TourAvailabilityController::class, 'update']
+            )->name('tours.availability.update');
+
+            // ── Reservas ───────────────────────────────────────────────────
+            Route::resource('reservas', ReservaController::class);
+
+            // ── Clientes ───────────────────────────────────────────────────
+            Route::resource('clientes', ClienteController::class);
+            Route::get('clientes/buscar-documento', [ClienteController::class, 'buscarPorDocumento'])
+                ->name('clientes.buscar-documento');
+
+            // ── Catálogos relacionados con clientes ────────────────────────
+            Route::resource('dietas', DietaController::class);
+            Route::get('dietas/buscar', [DietaController::class, 'buscar'])->name('dietas.buscar');
+
+            Route::resource('idiomas', IdiomaController::class);
             Route::get('idiomas/buscar', [IdiomaController::class, 'buscar'])->name('idiomas.buscar');
+
+            Route::resource('paises', PaisController::class);
+            Route::get('paises/buscar', [PaisController::class, 'buscar'])->name('paises.buscar');
+
+            // ── Agentes ────────────────────────────────────────────────────
+            Route::resource('agentes', AgenteController::class);
+
+            // ── Categorías de Tours ────────────────────────────────────────
+            Route::resource('categorias', CategoriaController::class);
         });
     });

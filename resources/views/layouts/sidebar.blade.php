@@ -92,12 +92,13 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarTours" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarTours">
-                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Tours</span>
+                        <i class="ri-compass-line"></i> <span data-key="t-dashboards">Tours</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarTours">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{{ route('admin.tours.index')}}" class="nav-link" data-key="t-analytics">Lista de Tours</a></li>
-
+                            <li class="nav-item"><a href="{{ route('admin.tours.index')}}" class="nav-link">Lista de Tours</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.tours.create')}}" class="nav-link">Nuevo Tour</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.categorias.index')}}" class="nav-link">Categorías</a></li>
                         </ul>
                     </div>
                 </li>
@@ -105,11 +106,13 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarReservas" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarReservas">
-                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Reservas</span>
+                        <i class="ri-calendar-check-line"></i> <span data-key="t-dashboards">Reservas</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarReservas">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{{ route('admin.reservas.index')}}" class="nav-link" data-key="t-analytics">Lista de Reservas</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.reservas.index')}}" class="nav-link">Lista de Reservas</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.reservas.create')}}" class="nav-link">Nueva Reserva</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.agentes.index')}}" class="nav-link">Agentes</a></li>
                         </ul>
                     </div>
                 </li>
@@ -119,14 +122,15 @@
                 <li class="nav-item">
                     <a class="nav-link menu-link" href="#sidebarClientes" data-bs-toggle="collapse" role="button"
                        aria-expanded="false" aria-controls="sidebarClientes">
-                        <i class="ri-dashboard-2-line"></i> <span data-key="t-dashboards">Clientes</span>
+                        <i class="ri-group-line"></i> <span data-key="t-dashboards">Clientes</span>
                     </a>
                     <div class="collapse menu-dropdown" id="sidebarClientes">
                         <ul class="nav nav-sm flex-column">
-                            <li class="nav-item"><a href="{{ route('admin.clientes.index')}}" class="nav-link" data-key="t-analytics">Lista de Clientes</a></li>
-                            <li class="nav-item"><a href="{{ route('admin.dietas.index')}}" class="nav-link" data-key="t-analytics">Lista de Dietas</a></li>
-                            <li class="nav-item"><a href="{{ route('admin.idiomas.index')}}" class="nav-link" data-key="t-analytics">Lista de Idiomas</a></li>
-                            <li class="nav-item"><a href="{{ route('admin.paises.index')}}" class="nav-link" data-key="t-analytics">Lista de Paises</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.clientes.index')}}" class="nav-link">Lista de Clientes</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.clientes.create')}}" class="nav-link">Nuevo Cliente</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.dietas.index')}}" class="nav-link">Dietas</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.idiomas.index')}}" class="nav-link">Idiomas</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.paises.index')}}" class="nav-link">Países</a></li>
                         </ul>
                     </div>
                 </li>

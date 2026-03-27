@@ -63,7 +63,7 @@ class TourController extends Controller
 
     public function show(Tour $tour)
     {
-        $tour->load(['categorias', 'precios', 'availability']);
+        $tour->load(['categorias', 'precios', 'calendarYears']);
         return view('admin.tours.show', compact('tour'));
     }
 

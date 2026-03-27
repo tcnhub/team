@@ -96,11 +96,11 @@ class Grupo extends Model
     // }
 
     /**
-     * Relación con Usuario que creó la Biblia
+     * Relación con Admin que creó la Biblia
      */
     public function creadoPor()
     {
-        return $this->belongsTo(User::class, 'creado_por');
+        return $this->belongsTo(Admin::class, 'creado_por');
     }
 
     /**

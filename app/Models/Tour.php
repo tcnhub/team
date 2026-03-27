@@ -57,6 +57,46 @@ class Tour extends Model
     }
 
     /**
+     * Relación con los años de calendario
+     */
+    public function calendarYears()
+    {
+        return $this->hasMany(TourCalendarYear::class, 'tour_id');
+    }
+
+    /**
+     * Relación con la disponibilidad diaria
+     */
+    public function availability()
+    {
+        return $this->hasMany(TourAvailability::class, 'tour_id');
+    }
+
+    /**
+     * Accessor: capacidad diaria por defecto (usa max_personas)
+     */
+    public function getCapacidadDiariaAttribute(): int
+    {
+        return $this->max_personas ?? 300;
+    }
+
+    /**
+     * Accessor: capacidad máxima (usa max_personas)
+     */
+    public function getCapacidadMaximaAttribute(): int
+    {
+        return $this->max_personas ?? 300;
+    }
+
+    /**
+     * Accessor: nombre (alias de nombre_tour para compatibilidad)
+     */
+    public function getNombreAttribute(): string
+    {
+        return $this->nombre_tour ?? '';
+    }
+
+    /**
      * Scopes útiles
      */
     public function scopeActivos($query)
