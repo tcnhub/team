@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AgenteController;
 use App\Http\Controllers\Admin\AddonController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
+use App\Http\Controllers\Admin\ConfiguracionController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\DietaController;
 use App\Http\Controllers\Admin\IdiomaController;
@@ -107,5 +108,6 @@ Route::prefix('admin')
 
             // ── Categorías de Tours ────────────────────────────────────────
             Route::resource('categorias', CategoriaController::class);
+            Route::resource('configuraciones', ConfiguracionController::class);
         });
     });

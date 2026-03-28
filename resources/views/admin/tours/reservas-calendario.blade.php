@@ -215,7 +215,9 @@
             <div class="modal-body">
                 <div id="modalReservaAlerta" class="d-none mb-3"></div>
 
-                <div class="row g-3">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="row g-3">
 
                     {{-- Cliente --}}
                     <div class="col-md-7">
@@ -371,7 +373,9 @@
                         <label class="form-label">Código / N° Operación</label>
                         <input type="text" id="mr_pago_operacion" class="form-control" placeholder="N° transferencia, código Yape...">
                     </div>
-                    <div class="col-lg-4 ms-lg-auto">
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
                         <div class="card border shadow-none bg-light-subtle mb-0">
                             <div class="card-header bg-light">
                                 <h6 class="card-title mb-0"><i class="ri-file-list-3-line me-1"></i>Resumen de la reserva</h6>
@@ -380,6 +384,7 @@
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="mr_resumen_tarifa">0.00</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="mr_resumen_personas">1</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="mr_resumen_subtotal">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Addons</span><strong>USD <span id="mr_resumen_addons">0.00</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="mr_resumen_descuento">0.00</span></strong></div>
                                 <hr>
                                 <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="mr_resumen_total">0.00</span></strong></div>
@@ -451,9 +456,9 @@ function actualizarResumenModalReserva() {
     const pagoInicial = parseFloat(document.getElementById('mr_pago_monto').value || '0');
     const personas = parseInt(document.getElementById('mr_num_pasajeros').value || '0', 10);
     const subtotal = precio * personas;
-    const addonsTotal = Array.from(document.querySelectorAll('.mr-addon-check:checked')).reduce((acc, checkbox) => {
-        const monto = parseFloat(checkbox.dataset.monto || '0');
-        const qty = parseInt(checkbox.closest('.border').querySelector('.mr-addon-cantidad')?.value || '1', 10);
+    const addonsTotal = Array.from(document.querySelectorAll('.mr-addon-cantidad')).reduce((acc, select) => {
+        const monto = parseFloat(select.dataset.monto || '0');
+        const qty = parseInt(select.value || '0', 10);
         return acc + (monto * qty);
     }, 0);
     const total = Math.max(0, subtotal + addonsTotal - descuento);
@@ -462,7 +467,8 @@ function actualizarResumenModalReserva() {
     document.getElementById('mr_resumen_tarifa').textContent = precio.toFixed(2);
     document.getElementById('mr_resumen_personas').textContent = personas;
     document.getElementById('mr_resumen_subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('mr_resumen_descuento').textContent = descuento.toFixed(2);
+document.getElementById('mr_resumen_addons').textContent = addonsTotal.toFixed(2);
+document.getElementById('mr_resumen_descuento').textContent = descuento.toFixed(2);
     document.getElementById('mr_resumen_total').textContent = total.toFixed(2);
     document.getElementById('mr_resumen_inicial').textContent = pagoInicial.toFixed(2);
     document.getElementById('mr_resumen_saldo').textContent = saldo.toFixed(2);
@@ -481,28 +487,24 @@ function renderAddonsReserva(addons) {
         container.insertAdjacentHTML('beforeend', `
             <div class="col-md-6">
                 <div class="border rounded p-3 h-100">
-                    <div class="form-check mb-2">
-                        <input class="form-check-input mr-addon-check" type="checkbox" id="mr_addon_${addon.id}" data-monto="${addon.monto}">
-                        <label class="form-check-label fw-semibold" for="mr_addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
-                    </div>
+                    <div class="fw-semibold mb-1">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</div>
                     <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
                     <input type="hidden" name="mr_addons[${index}][addon_id]" class="mr-addon-id-input" value="${addon.id}" disabled>
                     <label class="form-label small">Cantidad</label>
-                    <input type="number" min="1" class="form-control form-control-sm mr-addon-cantidad" value="1" disabled>
+                    <select class="form-select form-select-sm mr-addon-cantidad" data-monto="${addon.monto}">
+                        ${Array.from({ length: 11 }, (_, qty) => `<option value="${qty}">${qty}</option>`).join('')}
+                    </select>
                 </div>
             </div>
         `);
     });
-    container.querySelectorAll('.mr-addon-check').forEach((checkbox) => {
-        checkbox.addEventListener('change', function () {
-            const qtyInput = this.closest('.border').querySelector('.mr-addon-cantidad');
+    container.querySelectorAll('.mr-addon-cantidad').forEach((select) => {
+        select.addEventListener('change', function () {
             const idInput = this.closest('.border').querySelector('.mr-addon-id-input');
-            qtyInput.disabled = !this.checked;
-            idInput.disabled = !this.checked;
+            idInput.disabled = parseInt(this.value || '0', 10) === 0;
             actualizarResumenModalReserva();
         });
     });
-    container.querySelectorAll('.mr-addon-cantidad').forEach((input) => input.addEventListener('input', actualizarResumenModalReserva));
 }
 
 async function cargarAddonsReserva() {
@@ -563,10 +565,12 @@ function obtenerPasajerosReservaPayload() {
 }
 
 function obtenerAddonsReservaPayload() {
-    return Array.from(document.querySelectorAll('.mr-addon-check:checked')).map((checkbox) => ({
-        addon_id: checkbox.id.replace('mr_addon_', ''),
-        cantidad: checkbox.closest('.border').querySelector('.mr-addon-cantidad')?.value || 1,
-    }));
+    return Array.from(document.querySelectorAll('.mr-addon-cantidad'))
+        .map((select) => ({
+            addon_id: select.closest('.border').querySelector('.mr-addon-id-input')?.value,
+            cantidad: select.value,
+        }))
+        .filter((item) => parseInt(item.cantidad || '0', 10) > 0);
 }
 
 // ── Activar tooltips ─────────────────────────────────────────────────────────

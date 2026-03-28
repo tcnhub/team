@@ -429,8 +429,6 @@
 
         if (!addons.length) {
             addonsEmpty.textContent = 'Este tour no tiene addons disponibles.';
-            addonsContainer.innerHTML = '';
-            addonsEmpty.textContent = 'Selecciona un tour para cargar addons disponibles.';
             return;
         }
 
@@ -440,25 +438,22 @@
             addonsContainer.insertAdjacentHTML('beforeend', `
                 <div class="col-md-6">
                     <div class="border rounded p-3 h-100">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input addon-toggle" type="checkbox" id="addon_${addon.id}" ${selected ? 'checked' : ''}>
-                            <label class="form-check-label fw-semibold" for="addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
-                        </div>
+                        <div class="fw-semibold mb-1">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</div>
                         <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
                         <input type="hidden" name="addons[${index}][addon_id]" class="addon-id-input" value="${addon.id}" ${selected ? '' : 'disabled'}>
                         <label class="form-label small">Cantidad</label>
-                        <input type="number" min="1" name="addons[${index}][cantidad]" class="form-control form-control-sm addon-cantidad" value="${selected?.cantidad ?? 1}" ${selected ? '' : 'disabled'}>
+                        <select name="addons[${index}][cantidad]" class="form-select form-select-sm addon-cantidad" data-monto="${addon.monto}">
+                            ${Array.from({ length: 11 }, (_, qty) => `<option value="${qty}" ${parseInt(selected?.cantidad ?? 0, 10) === qty ? 'selected' : ''}>${qty}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
             `);
         });
 
-        addonsContainer.querySelectorAll('.addon-toggle').forEach(function (checkbox) {
-            checkbox.addEventListener('change', function () {
-                const qtyInput = this.closest('.border').querySelector('.addon-cantidad');
+        addonsContainer.querySelectorAll('.addon-cantidad').forEach(function (select) {
+            select.addEventListener('change', function () {
                 const idInput = this.closest('.border').querySelector('.addon-id-input');
-                qtyInput.disabled = !this.checked;
-                idInput.disabled = !this.checked;
+                idInput.disabled = parseInt(this.value || '0', 10) === 0;
             });
         });
     }

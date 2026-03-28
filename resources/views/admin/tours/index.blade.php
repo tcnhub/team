@@ -241,7 +241,7 @@
 
 {{-- ── Modal: Nueva Reserva desde Tours Index ───────────────────────────────── --}}
 <div class="modal fade" id="modalNuevaReservaTour" tabindex="-1" aria-labelledby="modalNRTLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title" id="modalNRTLabel">
@@ -252,7 +252,9 @@
             </div>
             <div class="modal-body">
                 <div id="nrtAlertError" class="alert alert-danger d-none"></div>
-                <div class="row g-3">
+                <div class="row g-4">
+                    <div class="col-lg-8">
+                        <div class="row g-3">
                     {{-- Cliente --}}
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
@@ -389,7 +391,9 @@
                         <label class="form-label">N° Operación</label>
                         <input type="text" id="nrt_pago_operacion" class="form-control" placeholder="Código Yape, N° transferencia...">
                     </div>
-                    <div class="col-lg-4 ms-lg-auto">
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
                         <div class="card border shadow-none bg-light-subtle mb-0">
                             <div class="card-header bg-light">
                                 <h6 class="card-title mb-0"><i class="ri-file-list-3-line me-1"></i>Resumen de la reserva</h6>
@@ -398,6 +402,7 @@
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="nrt_resumen_tarifa">0.00</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="nrt_resumen_personas">1</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="nrt_resumen_subtotal">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Addons</span><strong>USD <span id="nrt_resumen_addons">0.00</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="nrt_resumen_descuento">0.00</span></strong></div>
                                 <hr>
                                 <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="nrt_resumen_total">0.00</span></strong></div>
@@ -483,9 +488,9 @@
         const pagoInicial = parseFloat(document.getElementById('nrt_pago_monto').value || '0');
         const personas = parseInt(document.getElementById('nrt_num_pasajeros').value || '0', 10);
         const subtotal = precio * personas;
-        const addonsTotal = Array.from(document.querySelectorAll('.nrt-addon-check:checked')).reduce((acc, checkbox) => {
-            const monto = parseFloat(checkbox.dataset.monto || '0');
-            const qty = parseInt(checkbox.closest('.border').querySelector('.nrt-addon-cantidad')?.value || '1', 10);
+        const addonsTotal = Array.from(document.querySelectorAll('.nrt-addon-cantidad')).reduce((acc, select) => {
+            const monto = parseFloat(select.dataset.monto || '0');
+            const qty = parseInt(select.value || '0', 10);
             return acc + (monto * qty);
         }, 0);
         const total = Math.max(0, subtotal + addonsTotal - descuento);
@@ -493,6 +498,7 @@
         document.getElementById('nrt_resumen_tarifa').textContent = precio.toFixed(2);
         document.getElementById('nrt_resumen_personas').textContent = personas;
         document.getElementById('nrt_resumen_subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('nrt_resumen_addons').textContent = addonsTotal.toFixed(2);
         document.getElementById('nrt_resumen_descuento').textContent = descuento.toFixed(2);
         document.getElementById('nrt_resumen_total').textContent = total.toFixed(2);
         document.getElementById('nrt_resumen_inicial').textContent = pagoInicial.toFixed(2);
@@ -538,28 +544,24 @@
             container.insertAdjacentHTML('beforeend', `
                 <div class="col-md-6">
                     <div class="border rounded p-3 h-100">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input nrt-addon-check" type="checkbox" id="nrt_addon_${addon.id}" data-monto="${addon.monto}">
-                            <label class="form-check-label fw-semibold" for="nrt_addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
-                        </div>
+                        <div class="fw-semibold mb-1">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</div>
                         <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
                         <input type="hidden" name="nrt_addons[${index}][addon_id]" class="nrt-addon-id-input" value="${addon.id}" disabled>
                         <label class="form-label small">Cantidad</label>
-                        <input type="number" min="1" class="form-control form-control-sm nrt-addon-cantidad" value="1" disabled>
+                        <select class="form-select form-select-sm nrt-addon-cantidad" data-monto="${addon.monto}">
+                            ${Array.from({ length: 11 }, (_, qty) => `<option value="${qty}">${qty}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
             `);
         });
-        container.querySelectorAll('.nrt-addon-check').forEach((checkbox) => {
-            checkbox.addEventListener('change', function () {
-                const qtyInput = this.closest('.border').querySelector('.nrt-addon-cantidad');
+        container.querySelectorAll('.nrt-addon-cantidad').forEach((select) => {
+            select.addEventListener('change', function () {
                 const idInput = this.closest('.border').querySelector('.nrt-addon-id-input');
-                qtyInput.disabled = !this.checked;
-                idInput.disabled = !this.checked;
+                idInput.disabled = parseInt(this.value || '0', 10) === 0;
                 actualizarResumenNRT();
             });
         });
-        container.querySelectorAll('.nrt-addon-cantidad').forEach((input) => input.addEventListener('input', actualizarResumenNRT));
     }
 
     async function cargarAddonsNRT() {
@@ -584,10 +586,12 @@
     }
 
     function addonsPayloadNRT() {
-        return Array.from(document.querySelectorAll('.nrt-addon-check:checked')).map((checkbox) => ({
-            addon_id: checkbox.id.replace('nrt_addon_', ''),
-            cantidad: checkbox.closest('.border').querySelector('.nrt-addon-cantidad')?.value || 1,
-        }));
+        return Array.from(document.querySelectorAll('.nrt-addon-cantidad'))
+            .map((select) => ({
+                addon_id: select.closest('.border').querySelector('.nrt-addon-id-input')?.value,
+                cantidad: select.value,
+            }))
+            .filter((item) => parseInt(item.cantidad || '0', 10) > 0);
     }
 
     // Open modal when clicking "Nueva Reserva"
