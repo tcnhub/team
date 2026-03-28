@@ -281,6 +281,120 @@
                             </div>
                         </div>
 
+                        <div class="card mt-3">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-team-line me-2 text-primary"></i>Pasajeros asignados a la reserva
+                                </h5>
+                                <span class="badge bg-secondary" id="tablaPasajerosBadge">{{ $reserva->pasajeros->count() }}</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="tablaPasajerosAlert" class="alert d-none"></div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                        <tr>
+                                            <th>Tipo</th>
+                                            <th>Pasajero</th>
+                                            <th>Documento</th>
+                                            <th>Contacto</th>
+                                            <th class="text-end">Acciones</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="tablaPasajerosReservaBody">
+                                        @forelse($reserva->pasajeros as $pasajero)
+                                            @php
+                                                $tipoLabel = match($pasajero->tipo_pasajero) {
+                                                    'estudiante' => 'Estudiante',
+                                                    'nino' => 'Nino',
+                                                    default => 'Adulto',
+                                                };
+                                            @endphp
+                                            <tr data-pasajero-id="{{ $pasajero->id }}">
+                                                <td>
+                                                    <span class="badge bg-light text-dark border">{{ $tipoLabel }}</span>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold">
+                                                        <a href="{{ route('admin.pasajeros.show', $pasajero) }}">{{ $pasajero->nombre_completo }}</a>
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        {{ $pasajero->genero ? ucfirst($pasajero->genero) : 'Sin genero' }}
+                                                        @if($pasajero->fecha_nacimiento)
+                                                            <span class="ms-1">| {{ $pasajero->fecha_nacimiento->format('d/m/Y') }}</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-medium">{{ strtoupper($pasajero->tipo_documento ?? '-') }}</div>
+                                                    <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
+                                                </td>
+                                                <td>
+                                                    <div class="small">{{ $pasajero->email ?: 'Sin email' }}</div>
+                                                    <div class="text-muted small">{{ $pasajero->telefono ?: ($pasajero->whatsapp ?: 'Sin telefono') }}</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-warning btn-editar-pasajero"
+                                                        data-id="{{ $pasajero->id }}">
+                                                        <i class="ri-pencil-line"></i>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-danger btn-eliminar-pasajero"
+                                                        data-id="{{ $pasajero->id }}"
+                                                        data-nombre="{{ $pasajero->nombre_completo }}">
+                                                        <i class="ri-delete-bin-line"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr id="tablaPasajerosEmpty">
+                                                <td colspan="5" class="text-center text-muted py-4">Sin pasajeros vinculados a esta reserva.</td>
+                                            </tr>
+                                        @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($reserva->addons->isNotEmpty())
+                            <div class="card mt-3">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0"><i class="ri-service-line me-2 text-info"></i>Addons contratados</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm mb-0">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-3">Addon</th>
+                                                <th>Cantidad</th>
+                                                <th>Monto Unitario</th>
+                                                <th class="text-end pe-3">Total</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @foreach($reserva->addons as $addon)
+                                                <tr>
+                                                    <td class="ps-3">
+                                                        <div class="fw-semibold">{{ $addon->nombre }}</div>
+                                                        <small class="text-muted">{{ $addon->descripcion ?: 'Sin descripción' }}</small>
+                                                    </td>
+                                                    <td>{{ $addon->pivot->cantidad }}</td>
+                                                    <td>USD {{ number_format($addon->pivot->monto_unitario, 2) }}</td>
+                                                    <td class="text-end pe-3">USD {{ number_format($addon->pivot->monto_total, 2) }}</td>
+                                                </tr>
+                                            @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- Card: Notas --}}
                         @if($reserva->notas || $reserva->requisitos_especiales)
                             <div class="card mt-3">
@@ -351,12 +465,19 @@
                             </div>
                             <div class="card-body" id="listaPasajerosReserva">
                                 @forelse($reserva->pasajeros as $pasajero)
-                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                    @php
+                                        $tipoLabel = match($pasajero->tipo_pasajero) {
+                                            'estudiante' => 'Estudiante',
+                                            'nino' => 'Nino',
+                                            default => 'Adulto',
+                                        };
+                                    @endphp
+                                    <div class="d-flex justify-content-between border-bottom py-2" data-pasajero-id="{{ $pasajero->id }}">
                                         <div>
                                             <a href="{{ route('admin.pasajeros.show', $pasajero) }}" class="fw-semibold">{{ $pasajero->nombre_completo }}</a>
                                             <div class="text-muted small">
                                                 {{ $pasajero->numero_documento }}
-                                                <span class="badge bg-light text-dark border ms-1">{{ ucfirst($pasajero->tipo_pasajero ?? 'adulto') }}</span>
+                                                <span class="badge bg-light text-dark border ms-1">{{ $tipoLabel }}</span>
                                             </div>
                                         </div>
                                         <a href="{{ route('admin.tours.show', $pasajero->tour) }}" class="small">{{ $pasajero->tour?->nombre_tour ?? 'Sin tour' }}</a>
@@ -394,6 +515,21 @@
                         @endif
 
                         {{-- Card: Resumen financiero --}}
+                        @php
+                            $cantidadPersonasFinanciera = max(1, (int) $reserva->num_pasajeros);
+                            $tarifaPorPersona = (float) $reserva->precio_total;
+                            $subtotalReserva = $tarifaPorPersona * $cantidadPersonasFinanciera;
+                            $addonsReservaTotal = (float) $reserva->addons->sum(fn ($addon) => $addon->pivot->monto_total);
+                            $descuentoReserva = (float) ($reserva->descuento ?? 0);
+                            $totalReserva = max(0, $subtotalReserva + $addonsReservaTotal - $descuentoReserva);
+                            $pagosRealizados = $reserva->pagos
+                                ->whereNotIn('estado', ['rechazado'])
+                                ->whereNotIn('tipo_pago', ['proveedor', 'devolucion']);
+                            $cantidadPagosRealizados = $pagosRealizados->count();
+                            $montoTotalPagado = (float) $pagosRealizados->sum('monto');
+                            $saldoPorPagar = max(0, $totalReserva - $montoTotalPagado);
+                            $pctPago = $totalReserva > 0 ? min(100, round(($montoTotalPagado / $totalReserva) * 100)) : 0;
+                        @endphp
                         <div class="card mt-3">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
@@ -408,40 +544,57 @@
                                             <td class="fw-semibold text-end pe-3">{{ $reserva->moneda }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted ps-3">Precio Total</td>
-                                            <td class="fw-semibold text-end pe-3">{{ number_format($reserva->precio_total, 2) }}</td>
+                                            <td class="text-muted ps-3">Tarifa por persona</td>
+                                            <td class="fw-semibold text-end pe-3">{{ number_format($tarifaPorPersona, 2) }}</td>
                                         </tr>
+                                        <tr>
+                                            <td class="text-muted ps-3">Cantidad de personas</td>
+                                            <td class="fw-semibold text-end pe-3">{{ $cantidadPersonasFinanciera }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted ps-3">Subtotal de la reserva</td>
+                                            <td class="fw-semibold text-end pe-3">{{ number_format($subtotalReserva, 2) }}</td>
+                                        </tr>
+                                        @if($addonsReservaTotal > 0)
+                                            <tr>
+                                                <td class="text-muted ps-3">Addons</td>
+                                                <td class="fw-semibold text-end pe-3">{{ number_format($addonsReservaTotal, 2) }}</td>
+                                            </tr>
+                                        @endif
                                         @if($reserva->descuento > 0)
                                             <tr>
                                                 <td class="text-muted ps-3">Descuento</td>
-                                                <td class="fw-semibold text-danger text-end pe-3">- {{ number_format($reserva->descuento, 2) }}</td>
+                                                <td class="fw-semibold text-danger text-end pe-3">- {{ number_format($descuentoReserva, 2) }}</td>
                                             </tr>
                                         @endif
                                         <tr class="table-light">
-                                            <td class="fw-bold ps-3">Precio Final</td>
-                                            <td class="fw-bold text-success text-end pe-3 fs-6">{{ number_format($reserva->precio_final, 2) }}</td>
+                                            <td class="fw-bold ps-3">Total a pagar</td>
+                                            <td class="fw-bold text-success text-end pe-3 fs-6">{{ number_format($totalReserva, 2) }}</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted ps-3">Monto Pagado</td>
-                                            <td class="fw-semibold text-end pe-3">{{ number_format($reserva->monto_pagado, 2) }}</td>
+                                            <td class="text-muted ps-3">Pagos realizados</td>
+                                            <td class="fw-semibold text-end pe-3">{{ $cantidadPagosRealizados }}</td>
                                         </tr>
-                                        <tr class="{{ $reserva->saldo_pendiente > 0 ? 'table-warning' : 'table-success' }}">
-                                            <td class="fw-bold ps-3">Saldo Pendiente</td>
-                                            <td class="fw-bold text-end pe-3">{{ number_format($reserva->saldo_pendiente, 2) }}</td>
+                                        <tr>
+                                            <td class="text-muted ps-3">Monto total pagado</td>
+                                            <td class="fw-semibold text-end pe-3">{{ number_format($montoTotalPagado, 2) }}</td>
+                                        </tr>
+                                        <tr class="{{ $saldoPorPagar > 0 ? 'table-warning' : 'table-success' }}">
+                                            <td class="fw-bold ps-3">Saldo por pagar</td>
+                                            <td class="fw-bold text-end pe-3">{{ number_format($saldoPorPagar, 2) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-                            @if($reserva->precio_final > 0)
+                            @if($totalReserva > 0)
                                 <div class="card-footer py-2">
-                                    @php $pct = min(100, round(($reserva->monto_pagado / $reserva->precio_final) * 100)) @endphp
                                     <div class="d-flex justify-content-between mb-1">
                                         <small class="text-muted">Progreso de pago</small>
-                                        <small class="fw-semibold">{{ $pct }}%</small>
+                                        <small class="fw-semibold">{{ $pctPago }}%</small>
                                     </div>
                                     <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar {{ $pct >= 100 ? 'bg-success' : ($pct >= 50 ? 'bg-info' : 'bg-warning') }}"
-                                             style="width: {{ $pct }}%"></div>
+                                        <div class="progress-bar {{ $pctPago >= 100 ? 'bg-success' : ($pctPago >= 50 ? 'bg-info' : 'bg-warning') }}"
+                                             style="width: {{ $pctPago }}%"></div>
                                     </div>
                                 </div>
                             @endif
@@ -615,16 +768,123 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalEditarPasajero" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title"><i class="ri-pencil-line me-1"></i>Editar pasajero</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalEditarPasajeroAlert" class="alert d-none"></div>
+                <input type="hidden" id="edit_pasajero_id">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <select id="edit_tipo_pasajero" class="form-select">
+                            <option value="adulto">Adulto</option>
+                            <option value="estudiante">Estudiante</option>
+                            <option value="nino">Nino</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="edit_nombre" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" id="edit_apellido" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo documento</label>
+                        <select id="edit_tipo_documento" class="form-select">
+                            <option value="passport">Passport</option>
+                            <option value="dni">DNI</option>
+                            <option value="id">ID</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Numero documento</label>
+                        <input type="text" id="edit_numero_documento" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Genero</label>
+                        <select id="edit_genero" class="form-select">
+                            <option value="">Seleccionar...</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha nacimiento</label>
+                        <input type="text" id="edit_fecha_nacimiento" class="form-control flatpickr-date" data-date-format="Y-m-d">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="edit_email" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Telefono</label>
+                        <input type="text" id="edit_telefono" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="btnActualizarPasajeroModal">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerEditarPasajeroModal"></span>
+                    <i class="ri-save-line me-1"></i>Guardar cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEliminarPasajero" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="ri-delete-bin-line me-1"></i>Eliminar pasajero</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalEliminarPasajeroAlert" class="alert d-none"></div>
+                <input type="hidden" id="delete_pasajero_id">
+                <p class="mb-0">Se eliminara a <strong id="delete_pasajero_nombre">este pasajero</strong> de la reserva actual.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnEliminarPasajeroModal">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerEliminarPasajeroModal"></span>
+                    <i class="ri-delete-bin-line me-1"></i>Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const reservaId = {{ $reserva->id }};
     const pasajeroStoreUrl = '{{ route('admin.reservas.pasajeros.store-ajax', $reserva) }}';
     const pasajerosBulkUrl = '{{ route('admin.reservas.pasajeros.bulk-store-ajax', $reserva) }}';
+    const pasajeroEditUrlTemplate = '{{ route('admin.reservas.pasajeros.edit-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
+    const pasajeroUpdateUrlTemplate = '{{ route('admin.reservas.pasajeros.update-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
+    const pasajeroDestroyUrlTemplate = '{{ route('admin.reservas.pasajeros.destroy-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
 
     const alertBox = document.getElementById('pasajerosReservaAlert');
     const bulkBox = document.getElementById('bulkPasajerosBox');
     const bulkContainer = document.getElementById('bulkPasajerosContainer');
+    const tableAlert = document.getElementById('tablaPasajerosAlert');
+    const tableBody = document.getElementById('tablaPasajerosReservaBody');
+    const sideList = document.getElementById('listaPasajerosReserva');
+
+    function buildUrl(template, pasajeroId) {
+        return template.replace('__PASAJERO__', pasajeroId);
+    }
+
     function mostrarAlerta(message, type = 'success', target = alertBox) {
         if (!target) return;
         target.className = `alert alert-${type}`;
@@ -633,38 +893,24 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => target.classList.add('d-none'), 4000);
     }
 
-    function actualizarContadores(pasajeros) {
-        document.getElementById('pasajerosListaBadge').textContent =
-            parseInt(document.getElementById('pasajerosListaBadge').textContent || '0', 10) + pasajeros.length;
-        document.getElementById('reservaPasajerosRegistrados').textContent =
-            parseInt(document.getElementById('reservaPasajerosRegistrados').textContent || '0', 10) + pasajeros.length;
-        document.getElementById('reservaResumenTotal').textContent =
-            parseInt(document.getElementById('reservaResumenTotal').textContent || '0', 10) + pasajeros.length;
+    function actualizarContadoresDesdeResumen(resumen) {
+        if (!resumen) return;
 
-        pasajeros.forEach(function (pasajero) {
-            if (pasajero.tipo_pasajero === 'adulto') {
-                document.getElementById('reservaPasajerosAdultos').textContent =
-                    parseInt(document.getElementById('reservaPasajerosAdultos').textContent || '0', 10) + 1;
-                const resumenAdultos = document.getElementById('reservaResumenAdultos');
-                if (resumenAdultos) {
-                    resumenAdultos.textContent = parseInt(resumenAdultos.textContent || '0', 10) + 1;
-                }
-            } else if (pasajero.tipo_pasajero === 'estudiante') {
-                document.getElementById('reservaPasajerosEstudiantes').textContent =
-                    parseInt(document.getElementById('reservaPasajerosEstudiantes').textContent || '0', 10) + 1;
-                const resumenAdultos = document.getElementById('reservaResumenAdultos');
-                if (resumenAdultos) {
-                    resumenAdultos.textContent = parseInt(resumenAdultos.textContent || '0', 10) + 1;
-                }
-            } else if (pasajero.tipo_pasajero === 'nino') {
-                document.getElementById('reservaPasajerosNinos').textContent =
-                    parseInt(document.getElementById('reservaPasajerosNinos').textContent || '0', 10) + 1;
-                const resumenNinos = document.getElementById('reservaResumenNinos');
-                if (resumenNinos) {
-                    resumenNinos.textContent = parseInt(resumenNinos.textContent || '0', 10) + 1;
-                }
-            }
-        });
+        const rows = tableBody ? Array.from(tableBody.querySelectorAll('tr[data-pasajero-id]')) : [];
+        const totalRows = rows.length;
+        const adultos = rows.filter((row) => row.textContent.includes('Adulto')).length;
+        const estudiantes = rows.filter((row) => row.textContent.includes('Estudiante')).length;
+        const ninos = rows.filter((row) => row.textContent.includes('Nino')).length;
+
+        document.getElementById('tablaPasajerosBadge').textContent = totalRows;
+        document.getElementById('pasajerosListaBadge').textContent = totalRows;
+        document.getElementById('reservaPasajerosRegistrados').textContent = totalRows;
+        document.getElementById('reservaPasajerosAdultos').textContent = adultos;
+        document.getElementById('reservaPasajerosEstudiantes').textContent = estudiantes;
+        document.getElementById('reservaPasajerosNinos').textContent = ninos;
+        document.getElementById('reservaResumenTotal').textContent = resumen.num_pasajeros ?? totalRows;
+        document.getElementById('reservaResumenAdultos').textContent = resumen.num_adultos ?? 0;
+        document.getElementById('reservaResumenNinos').textContent = resumen.num_ninos ?? 0;
     }
 
     function badgeTipo(tipo) {
@@ -698,6 +944,141 @@ document.addEventListener('DOMContentLoaded', function () {
         cardBody.prepend(row);
     }
 
+    function generoLabel(genero) {
+        if (genero === 'male') return 'Masculino';
+        if (genero === 'female') return 'Femenino';
+        if (genero === 'other') return 'Otro';
+        return 'Sin genero';
+    }
+
+    function contactoLabel(pasajero) {
+        return pasajero.telefono || pasajero.whatsapp || 'Sin telefono';
+    }
+
+    function badgeTipo(tipo) {
+        if (tipo === 'estudiante') return 'Estudiante';
+        if (tipo === 'nino') return 'Nino';
+        return 'Adulto';
+    }
+
+    function renderPassengerSideItem(pasajero) {
+        return `
+            <div class="d-flex justify-content-between border-bottom py-2" data-pasajero-id="${pasajero.id}">
+                <div>
+                    <a href="${pasajero.show_url}" class="fw-semibold">${pasajero.nombre_completo}</a>
+                    <div class="text-muted small">
+                        ${pasajero.numero_documento}
+                        <span class="badge bg-light text-dark border ms-1">${badgeTipo(pasajero.tipo_pasajero)}</span>
+                    </div>
+                </div>
+                <span class="small">${pasajero.tour_nombre ?? 'Sin tour'}</span>
+            </div>
+        `;
+    }
+
+    function renderPassengerTableRow(pasajero) {
+        const fechaNacimiento = pasajero.fecha_nacimiento
+            ? new Date(`${pasajero.fecha_nacimiento}T00:00:00`).toLocaleDateString('es-PE')
+            : '';
+
+        return `
+            <tr data-pasajero-id="${pasajero.id}">
+                <td><span class="badge bg-light text-dark border">${badgeTipo(pasajero.tipo_pasajero)}</span></td>
+                <td>
+                    <div class="fw-semibold"><a href="${pasajero.show_url}">${pasajero.nombre_completo}</a></div>
+                    <div class="text-muted small">
+                        ${generoLabel(pasajero.genero)}
+                        ${fechaNacimiento ? `<span class="ms-1">| ${fechaNacimiento}</span>` : ''}
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-medium">${(pasajero.tipo_documento || '-').toUpperCase()}</div>
+                    <div class="text-muted small">${pasajero.numero_documento}</div>
+                </td>
+                <td>
+                    <div class="small">${pasajero.email || 'Sin email'}</div>
+                    <div class="text-muted small">${contactoLabel(pasajero)}</div>
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-sm btn-outline-warning btn-editar-pasajero" data-id="${pasajero.id}">
+                        <i class="ri-pencil-line"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-eliminar-pasajero" data-id="${pasajero.id}" data-nombre="${pasajero.nombre_completo}">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    function syncTableEmptyState() {
+        if (!tableBody) return;
+
+        const rows = tableBody.querySelectorAll('tr[data-pasajero-id]');
+        const emptyRow = document.getElementById('tablaPasajerosEmpty');
+
+        if (!rows.length) {
+            if (!emptyRow) {
+                tableBody.innerHTML = '<tr id="tablaPasajerosEmpty"><td colspan="5" class="text-center text-muted py-4">Sin pasajeros vinculados a esta reserva.</td></tr>';
+            }
+        } else if (emptyRow) {
+            emptyRow.remove();
+        }
+    }
+
+    function syncSideEmptyState() {
+        if (!sideList) return;
+
+        const items = sideList.querySelectorAll('[data-pasajero-id]');
+        const empty = sideList.querySelector('small.text-muted');
+
+        if (!items.length) {
+            if (!empty) {
+                sideList.innerHTML = '<small class="text-muted">Sin pasajeros vinculados.</small>';
+            }
+        } else if (empty) {
+            empty.remove();
+        }
+    }
+
+    function upsertPassengerSideItem(pasajero, prepend = false) {
+        if (!sideList) return;
+
+        syncSideEmptyState();
+        const existing = sideList.querySelector(`[data-pasajero-id="${pasajero.id}"]`);
+        if (existing) {
+            existing.outerHTML = renderPassengerSideItem(pasajero);
+            return;
+        }
+
+        sideList.insertAdjacentHTML(prepend ? 'afterbegin' : 'beforeend', renderPassengerSideItem(pasajero));
+    }
+
+    function upsertPassengerTableRow(pasajero, prepend = false) {
+        if (!tableBody) return;
+
+        syncTableEmptyState();
+        const existing = tableBody.querySelector(`tr[data-pasajero-id="${pasajero.id}"]`);
+        if (existing) {
+            existing.outerHTML = renderPassengerTableRow(pasajero);
+            return;
+        }
+
+        tableBody.insertAdjacentHTML(prepend ? 'afterbegin' : 'beforeend', renderPassengerTableRow(pasajero));
+    }
+
+    function removePassengerFromUI(pasajeroId) {
+        tableBody?.querySelector(`tr[data-pasajero-id="${pasajeroId}"]`)?.remove();
+        sideList?.querySelector(`[data-pasajero-id="${pasajeroId}"]`)?.remove();
+        syncTableEmptyState();
+        syncSideEmptyState();
+    }
+
+    function agregarPasajeroAlListado(pasajero) {
+        upsertPassengerSideItem(pasajero, true);
+        upsertPassengerTableRow(pasajero, true);
+    }
+
     function limpiarModalPasajero() {
         ['modal_nombre', 'modal_apellido', 'modal_numero_documento', 'modal_email', 'modal_telefono'].forEach(function (id) {
             const input = document.getElementById(id);
@@ -710,6 +1091,38 @@ document.addEventListener('DOMContentLoaded', function () {
             window.setFlatpickrDate(document.getElementById('modal_fecha_nacimiento'), '');
         } else {
             document.getElementById('modal_fecha_nacimiento').value = '';
+        }
+    }
+
+    function limpiarModalEditarPasajero() {
+        ['edit_pasajero_id', 'edit_nombre', 'edit_apellido', 'edit_numero_documento', 'edit_email', 'edit_telefono'].forEach(function (id) {
+            const input = document.getElementById(id);
+            if (input) input.value = '';
+        });
+        document.getElementById('edit_tipo_pasajero').value = 'adulto';
+        document.getElementById('edit_tipo_documento').value = 'passport';
+        document.getElementById('edit_genero').value = '';
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(document.getElementById('edit_fecha_nacimiento'), '');
+        } else {
+            document.getElementById('edit_fecha_nacimiento').value = '';
+        }
+    }
+
+    function cargarPasajeroEnModal(pasajero) {
+        document.getElementById('edit_pasajero_id').value = pasajero.id;
+        document.getElementById('edit_tipo_pasajero').value = pasajero.tipo_pasajero || 'adulto';
+        document.getElementById('edit_nombre').value = pasajero.nombre || '';
+        document.getElementById('edit_apellido').value = pasajero.apellido || '';
+        document.getElementById('edit_tipo_documento').value = pasajero.tipo_documento || 'passport';
+        document.getElementById('edit_numero_documento').value = pasajero.numero_documento || '';
+        document.getElementById('edit_genero').value = pasajero.genero || '';
+        document.getElementById('edit_email').value = pasajero.email || '';
+        document.getElementById('edit_telefono').value = pasajero.telefono || '';
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(document.getElementById('edit_fecha_nacimiento'), pasajero.fecha_nacimiento || '');
+        } else {
+            document.getElementById('edit_fecha_nacimiento').value = pasajero.fecha_nacimiento || '';
         }
     }
 
@@ -842,7 +1255,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             agregarPasajeroAlListado(data.pasajero);
-            actualizarContadores([data.pasajero]);
+            actualizarContadoresDesdeResumen(data.resumen);
             mostrarAlerta('Pasajero agregado correctamente.');
             bootstrap.Modal.getInstance(document.getElementById('modalAgregarPasajero')).hide();
             limpiarModalPasajero();
@@ -857,6 +1270,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.getElementById('modalAgregarPasajero')?.addEventListener('show.bs.modal', limpiarModalPasajero);
+    document.getElementById('modalEditarPasajero')?.addEventListener('show.bs.modal', function () {
+        document.getElementById('modalEditarPasajeroAlert')?.classList.add('d-none');
+    });
 
     document.getElementById('btnGuardarPasajerosBulk')?.addEventListener('click', async function () {
         const cards = bulkContainer.querySelectorAll('[data-tipo]');
@@ -896,7 +1312,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             data.pasajeros.forEach(agregarPasajeroAlListado);
-            actualizarContadores(data.pasajeros);
+            actualizarContadoresDesdeResumen(data.resumen);
             bulkContainer.innerHTML = '';
             bulkBox.classList.add('d-none');
             document.getElementById('cantidadAdultos').value = '0';
@@ -909,6 +1325,141 @@ document.addEventListener('DOMContentLoaded', function () {
             spinner.classList.add('d-none');
             this.disabled = false;
         }
+    });
+
+    document.addEventListener('click', async function (event) {
+        const editButton = event.target.closest('.btn-editar-pasajero');
+        if (editButton) {
+            const pasajeroId = editButton.dataset.id;
+            const alert = document.getElementById('modalEditarPasajeroAlert');
+            limpiarModalEditarPasajero();
+            alert.classList.add('d-none');
+
+            try {
+                const response = await fetch(buildUrl(pasajeroEditUrlTemplate, pasajeroId), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    throw new Error(data.message || 'No se pudo cargar el pasajero.');
+                }
+
+                cargarPasajeroEnModal(data.pasajero);
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarPasajero')).show();
+            } catch (error) {
+                mostrarAlerta(error.message, 'danger', tableAlert);
+            }
+
+            return;
+        }
+
+        const deleteButton = event.target.closest('.btn-eliminar-pasajero');
+        if (deleteButton) {
+            document.getElementById('delete_pasajero_id').value = deleteButton.dataset.id;
+            document.getElementById('delete_pasajero_nombre').textContent = deleteButton.dataset.nombre || 'este pasajero';
+            document.getElementById('modalEliminarPasajeroAlert')?.classList.add('d-none');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEliminarPasajero')).show();
+        }
+    });
+
+    document.getElementById('btnActualizarPasajeroModal')?.addEventListener('click', async function () {
+        const pasajeroId = document.getElementById('edit_pasajero_id').value;
+        const spinner = document.getElementById('spinnerEditarPasajeroModal');
+        const alert = document.getElementById('modalEditarPasajeroAlert');
+        const payload = {
+            tipo_pasajero: document.getElementById('edit_tipo_pasajero').value,
+            nombre: document.getElementById('edit_nombre').value.trim(),
+            apellido: document.getElementById('edit_apellido').value.trim(),
+            tipo_documento: document.getElementById('edit_tipo_documento').value,
+            numero_documento: document.getElementById('edit_numero_documento').value.trim(),
+            genero: document.getElementById('edit_genero').value || null,
+            fecha_nacimiento: document.getElementById('edit_fecha_nacimiento').value || null,
+            email: document.getElementById('edit_email').value.trim() || null,
+            telefono: document.getElementById('edit_telefono').value.trim() || null,
+        };
+
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+        alert.classList.add('d-none');
+
+        try {
+            const response = await fetch(buildUrl(pasajeroUpdateUrlTemplate, pasajeroId), {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudo actualizar el pasajero.');
+            }
+
+            upsertPassengerSideItem(data.pasajero);
+            upsertPassengerTableRow(data.pasajero);
+            actualizarContadoresDesdeResumen(data.resumen);
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarPasajero')).hide();
+            mostrarAlerta(data.message || 'Pasajero actualizado correctamente.', 'success', tableAlert);
+        } catch (error) {
+            alert.className = 'alert alert-danger';
+            alert.textContent = error.message;
+            alert.classList.remove('d-none');
+        } finally {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
+    document.getElementById('btnEliminarPasajeroModal')?.addEventListener('click', async function () {
+        const pasajeroId = document.getElementById('delete_pasajero_id').value;
+        const spinner = document.getElementById('spinnerEliminarPasajeroModal');
+        const alert = document.getElementById('modalEliminarPasajeroAlert');
+
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+        alert.classList.add('d-none');
+
+        try {
+            const response = await fetch(buildUrl(pasajeroDestroyUrlTemplate, pasajeroId), {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudo eliminar el pasajero.');
+            }
+
+            removePassengerFromUI(pasajeroId);
+            actualizarContadoresDesdeResumen(data.resumen);
+            bootstrap.Modal.getInstance(document.getElementById('modalEliminarPasajero')).hide();
+            mostrarAlerta(data.message || 'Pasajero eliminado correctamente.', 'success', tableAlert);
+        } catch (error) {
+            alert.className = 'alert alert-danger';
+            alert.textContent = error.message;
+            alert.classList.remove('d-none');
+        } finally {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
+    syncTableEmptyState();
+    syncSideEmptyState();
+    actualizarContadoresDesdeResumen({
+        num_pasajeros: {{ $reserva->num_pasajeros }},
+        num_adultos: {{ $reserva->num_adultos }},
+        num_ninos: {{ $reserva->num_ninos }},
     });
 });
 </script>

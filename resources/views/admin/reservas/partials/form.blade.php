@@ -228,6 +228,19 @@
                    value="{{ isset($reserva) ? $reserva->descuento : old('descuento', 0) }}">
         </div>
 
+        <div class="col-12">
+            <div class="border rounded p-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        <label class="form-label fw-semibold mb-0">Addons de la Reserva</label>
+                        <div class="form-text">Se muestran según el tour seleccionado.</div>
+                    </div>
+                </div>
+                <div id="addonsReservaContainer" class="row g-3"></div>
+                <div id="addonsReservaEmpty" class="text-muted small">Selecciona un tour para cargar addons disponibles.</div>
+            </div>
+        </div>
+
         <!-- ── Notas ── -->
         <div class="col-12">
             <label class="form-label">Notas / Observaciones</label>
@@ -375,6 +388,7 @@
 (function () {
     // ── Variables globales del formulario ──────────────────────────────────
     const AVAIL_BASE_URL = '{{ rtrim(url("admin/tours"), "/") }}';
+    const selectedAddons = @json(collect(old('addons', isset($reserva) ? $reserva->addons->map(fn($addon) => ['addon_id' => $addon->id, 'cantidad' => $addon->pivot->cantidad])->values()->all() : [])));
 
     // Duración del tour seleccionado (días), null si no hay tour
     let tourDias = null;
@@ -392,6 +406,8 @@
     const tourInfoBadge= document.getElementById('tourInfoBadge');
     const fechaFinHint = document.getElementById('fechaFinHint');
     const availHint    = document.getElementById('availabilityHint');
+    const addonsContainer = document.getElementById('addonsReservaContainer');
+    const addonsEmpty = document.getElementById('addonsReservaEmpty');
 
     function calcFechaFin() {
         if (!tourDias || !inputFechaI.value) return;
@@ -406,6 +422,45 @@
         } else {
             inputFechaF.value = fechaFin;
         }
+    }
+
+    function renderAddons(addons) {
+        addonsContainer.innerHTML = '';
+
+        if (!addons.length) {
+            addonsEmpty.textContent = 'Este tour no tiene addons disponibles.';
+            addonsContainer.innerHTML = '';
+            addonsEmpty.textContent = 'Selecciona un tour para cargar addons disponibles.';
+            return;
+        }
+
+        addonsEmpty.textContent = '';
+        addons.forEach(function (addon, index) {
+            const selected = selectedAddons.find((item) => parseInt(item.addon_id, 10) === addon.id);
+            addonsContainer.insertAdjacentHTML('beforeend', `
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input addon-toggle" type="checkbox" id="addon_${addon.id}" ${selected ? 'checked' : ''}>
+                            <label class="form-check-label fw-semibold" for="addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
+                        </div>
+                        <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
+                        <input type="hidden" name="addons[${index}][addon_id]" class="addon-id-input" value="${addon.id}" ${selected ? '' : 'disabled'}>
+                        <label class="form-label small">Cantidad</label>
+                        <input type="number" min="1" name="addons[${index}][cantidad]" class="form-control form-control-sm addon-cantidad" value="${selected?.cantidad ?? 1}" ${selected ? '' : 'disabled'}>
+                    </div>
+                </div>
+            `);
+        });
+
+        addonsContainer.querySelectorAll('.addon-toggle').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                const qtyInput = this.closest('.border').querySelector('.addon-cantidad');
+                const idInput = this.closest('.border').querySelector('.addon-id-input');
+                qtyInput.disabled = !this.checked;
+                idInput.disabled = !this.checked;
+            });
+        });
     }
 
     async function cargarAvailabilities(tourId) {
@@ -431,6 +486,20 @@
         } catch (e) {
             selAvail.innerHTML = '<option value="">— Error al cargar fechas —</option>';
             availHint.textContent = 'No se pudieron cargar las fechas disponibles.';
+        }
+    }
+
+    async function cargarAddons(tourId) {
+        addonsContainer.innerHTML = '';
+        addonsEmpty.textContent = 'Cargando addons...';
+        try {
+            const res  = await fetch(`${AVAIL_BASE_URL}/${tourId}/addons-json`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            renderAddons(data);
+        } catch (e) {
+            addonsEmpty.textContent = 'No se pudieron cargar los addons del tour.';
         }
     }
 
@@ -469,6 +538,7 @@
 
         // Cargar disponibilidades del tour vía AJAX
         cargarAvailabilities(this.value);
+        cargarAddons(this.value);
     });
 
     // Recalcular fecha_fin cuando cambia fecha_inicio
@@ -477,6 +547,8 @@
     // Disparar evento change si ya hay un tour seleccionado (modo edición / old())
     if (selectTour.value) {
         selectTour.dispatchEvent(new Event('change'));
+    } else {
+        addonsEmpty.textContent = 'Selecciona un tour para cargar addons disponibles.';
     }
 
     // Hint de pago inicial: mostrar saldo sugerido al escribir precio

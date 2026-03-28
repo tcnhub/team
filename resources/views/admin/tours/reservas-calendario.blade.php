@@ -264,16 +264,20 @@
                     {{-- Pasajeros --}}
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Pasajeros</label>
-                        <input type="number" id="mr_num_pasajeros" class="form-control" value="1" min="1">
+                        <input type="number" id="mr_num_pasajeros" class="form-control" value="1" min="1" readonly>
                         <div class="invalid-feedback" id="err_mr_num_pasajeros"></div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Adultos</label>
-                        <input type="number" id="mr_num_adultos" class="form-control" value="1" min="0">
+                        <input type="number" id="mr_num_adultos" class="form-control" value="1" min="0" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Estudiantes</label>
+                        <input type="number" id="mr_num_estudiantes" class="form-control" value="0" min="0" readonly>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Niños</label>
-                        <input type="number" id="mr_num_ninos" class="form-control" value="0" min="0">
+                        <input type="number" id="mr_num_ninos" class="form-control" value="0" min="0" readonly>
                     </div>
 
                     {{-- Precio --}}
@@ -302,7 +306,50 @@
                         <textarea id="mr_notas" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
                     </div>
 
+                    <div class="col-12">
+                        <hr class="border-dashed my-1">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <p class="fw-semibold mb-0 text-primary"><i class="ri-group-line me-1"></i>Pasajeros de la reserva</p>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="mr_btn_generar_pasajeros">
+                                <i class="ri-layout-grid-line me-1"></i>Generar formularios
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de adultos</label>
+                        <select id="mr_cantidad_adultos" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}" @selected($i === 1)>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de estudiantes</label>
+                        <select id="mr_cantidad_estudiantes" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de niños</label>
+                        <select id="mr_cantidad_ninos" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-12 d-none" id="mr_pasajeros_box">
+                        <div id="mr_pasajeros_container" class="row g-3"></div>
+                    </div>
+
                     {{-- ── Pago Inicial ── --}}
+                    <div class="col-12">
+                        <hr class="border-dashed my-1">
+                        <p class="fw-semibold mb-2 text-info"><i class="ri-service-line me-1"></i>Addons disponibles</p>
+                        <div id="mr_addons_container" class="row g-3"></div>
+                        <small id="mr_addons_empty" class="text-muted">No hay addons cargados para este tour.</small>
+                    </div>
                     <div class="col-12">
                         <hr class="border-dashed my-1">
                         <p class="fw-semibold mb-2 text-success"><i class="ri-bank-card-line me-1"></i>Pago Inicial <small class="text-muted fw-normal">(opcional)</small></p>
@@ -323,6 +370,23 @@
                     <div class="col-md-5">
                         <label class="form-label">Código / N° Operación</label>
                         <input type="text" id="mr_pago_operacion" class="form-control" placeholder="N° transferencia, código Yape...">
+                    </div>
+                    <div class="col-lg-4 ms-lg-auto">
+                        <div class="card border shadow-none bg-light-subtle mb-0">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0"><i class="ri-file-list-3-line me-1"></i>Resumen de la reserva</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="mr_resumen_tarifa">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="mr_resumen_personas">1</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="mr_resumen_subtotal">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="mr_resumen_descuento">0.00</span></strong></div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="mr_resumen_total">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Pago inicial</span><strong>USD <span id="mr_resumen_inicial">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small"><span class="text-muted">Saldo pendiente</span><strong>USD <span id="mr_resumen_saldo">0.00</span></strong></div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>
@@ -349,6 +413,161 @@ const TOUR_PRECIO   = {{ $tour->precio_base ?? 'null' }};
 const TOUR_MONEDA   = 'USD';
 const STORE_URL     = '{{ route('admin.tours.reservas.store-ajax', $tour) }}';
 const CSRF          = document.querySelector('meta[name="csrf-token"]')?.content;
+const ADDONS_URL    = '{{ route('admin.tours.addons.json', $tour) }}';
+
+function badgeTipoReserva(tipo) {
+    if (tipo === 'estudiante') return 'Estudiante';
+    if (tipo === 'nino') return 'Nino';
+    return 'Adulto';
+}
+
+function cardPasajeroReserva(prefix, index, tipo) {
+    return `
+        <div class="col-12" data-tipo="${tipo}">
+            <div class="border rounded p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Pasajero ${index + 1}</h6>
+                    <span class="badge bg-light text-dark border">${badgeTipoReserva(tipo)}</span>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-3"><label class="form-label">Nombre</label><input type="text" class="form-control" data-key="nombre"></div>
+                    <div class="col-md-3"><label class="form-label">Apellido</label><input type="text" class="form-control" data-key="apellido"></div>
+                    <div class="col-md-2"><label class="form-label">Tipo Doc.</label><select class="form-select" data-key="tipo_documento"><option value="passport">Passport</option><option value="dni">DNI</option><option value="id">ID</option></select></div>
+                    <div class="col-md-2"><label class="form-label">Documento</label><input type="text" class="form-control" data-key="numero_documento"></div>
+                    <div class="col-md-2"><label class="form-label">Genero</label><select class="form-select" data-key="genero"><option value="">-</option><option value="male">Masculino</option><option value="female">Femenino</option><option value="other">Otro</option></select></div>
+                    <div class="col-md-3"><label class="form-label">Fecha Nacimiento</label><input type="text" class="form-control flatpickr-date" data-date-format="Y-m-d" data-key="fecha_nacimiento"></div>
+                    <div class="col-md-3"><label class="form-label">Email</label><input type="email" class="form-control" data-key="email"></div>
+                    <div class="col-md-3"><label class="form-label">Telefono</label><input type="text" class="form-control" data-key="telefono"></div>
+                    <div class="col-md-3"><label class="form-label">WhatsApp</label><input type="text" class="form-control" data-key="whatsapp"></div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function actualizarResumenModalReserva() {
+    const precio = parseFloat(document.getElementById('mr_precio_total').value || '0');
+    const descuento = parseFloat(document.getElementById('mr_descuento').value || '0');
+    const pagoInicial = parseFloat(document.getElementById('mr_pago_monto').value || '0');
+    const personas = parseInt(document.getElementById('mr_num_pasajeros').value || '0', 10);
+    const subtotal = precio * personas;
+    const addonsTotal = Array.from(document.querySelectorAll('.mr-addon-check:checked')).reduce((acc, checkbox) => {
+        const monto = parseFloat(checkbox.dataset.monto || '0');
+        const qty = parseInt(checkbox.closest('.border').querySelector('.mr-addon-cantidad')?.value || '1', 10);
+        return acc + (monto * qty);
+    }, 0);
+    const total = Math.max(0, subtotal + addonsTotal - descuento);
+    const saldo = Math.max(0, total - pagoInicial);
+
+    document.getElementById('mr_resumen_tarifa').textContent = precio.toFixed(2);
+    document.getElementById('mr_resumen_personas').textContent = personas;
+    document.getElementById('mr_resumen_subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('mr_resumen_descuento').textContent = descuento.toFixed(2);
+    document.getElementById('mr_resumen_total').textContent = total.toFixed(2);
+    document.getElementById('mr_resumen_inicial').textContent = pagoInicial.toFixed(2);
+    document.getElementById('mr_resumen_saldo').textContent = saldo.toFixed(2);
+}
+
+function renderAddonsReserva(addons) {
+    const container = document.getElementById('mr_addons_container');
+    const empty = document.getElementById('mr_addons_empty');
+    container.innerHTML = '';
+    if (!addons.length) {
+        empty.textContent = 'No hay addons disponibles para este tour.';
+        return;
+    }
+    empty.textContent = '';
+    addons.forEach((addon, index) => {
+        container.insertAdjacentHTML('beforeend', `
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input mr-addon-check" type="checkbox" id="mr_addon_${addon.id}" data-monto="${addon.monto}">
+                        <label class="form-check-label fw-semibold" for="mr_addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
+                    </div>
+                    <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
+                    <input type="hidden" name="mr_addons[${index}][addon_id]" class="mr-addon-id-input" value="${addon.id}" disabled>
+                    <label class="form-label small">Cantidad</label>
+                    <input type="number" min="1" class="form-control form-control-sm mr-addon-cantidad" value="1" disabled>
+                </div>
+            </div>
+        `);
+    });
+    container.querySelectorAll('.mr-addon-check').forEach((checkbox) => {
+        checkbox.addEventListener('change', function () {
+            const qtyInput = this.closest('.border').querySelector('.mr-addon-cantidad');
+            const idInput = this.closest('.border').querySelector('.mr-addon-id-input');
+            qtyInput.disabled = !this.checked;
+            idInput.disabled = !this.checked;
+            actualizarResumenModalReserva();
+        });
+    });
+    container.querySelectorAll('.mr-addon-cantidad').forEach((input) => input.addEventListener('input', actualizarResumenModalReserva));
+}
+
+async function cargarAddonsReserva() {
+    try {
+        const res = await fetch(ADDONS_URL, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+        renderAddonsReserva(data);
+    } catch (e) {
+        document.getElementById('mr_addons_empty').textContent = 'No se pudieron cargar los addons.';
+    }
+}
+
+function sincronizarContadoresReserva() {
+    const adultos = parseInt(document.getElementById('mr_cantidad_adultos').value || '0', 10);
+    const estudiantes = parseInt(document.getElementById('mr_cantidad_estudiantes').value || '0', 10);
+    const ninos = parseInt(document.getElementById('mr_cantidad_ninos').value || '0', 10);
+    document.getElementById('mr_num_adultos').value = adultos + estudiantes;
+    document.getElementById('mr_num_estudiantes').value = estudiantes;
+    document.getElementById('mr_num_ninos').value = ninos;
+    document.getElementById('mr_num_pasajeros').value = adultos + estudiantes + ninos;
+    actualizarResumenModalReserva();
+}
+
+function generarFormulariosPasajerosReserva() {
+    const container = document.getElementById('mr_pasajeros_container');
+    const box = document.getElementById('mr_pasajeros_box');
+    const cantidades = [
+        { tipo: 'adulto', cantidad: parseInt(document.getElementById('mr_cantidad_adultos').value || '0', 10) },
+        { tipo: 'estudiante', cantidad: parseInt(document.getElementById('mr_cantidad_estudiantes').value || '0', 10) },
+        { tipo: 'nino', cantidad: parseInt(document.getElementById('mr_cantidad_ninos').value || '0', 10) },
+    ];
+    let html = '';
+    let index = 0;
+    cantidades.forEach((grupo) => {
+        for (let i = 0; i < grupo.cantidad; i++) {
+            html += cardPasajeroReserva('mr', index, grupo.tipo);
+            index++;
+        }
+    });
+    container.innerHTML = html;
+    box.classList.toggle('d-none', index === 0);
+    container.querySelectorAll('.flatpickr-date').forEach((input) => {
+        if (window.flatpickr && !input._flatpickr) {
+            window.flatpickr(input, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', allowInput: true, locale: 'es' });
+        }
+    });
+    sincronizarContadoresReserva();
+}
+
+function obtenerPasajerosReservaPayload() {
+    return Array.from(document.querySelectorAll('#mr_pasajeros_container [data-tipo]')).map((wrapper) => {
+        const data = { tipo_pasajero: wrapper.dataset.tipo };
+        wrapper.querySelectorAll('[data-key]').forEach((input) => {
+            data[input.dataset.key] = input.value || null;
+        });
+        return data;
+    });
+}
+
+function obtenerAddonsReservaPayload() {
+    return Array.from(document.querySelectorAll('.mr-addon-check:checked')).map((checkbox) => ({
+        addon_id: checkbox.id.replace('mr_addon_', ''),
+        cantidad: checkbox.closest('.border').querySelector('.mr-addon-cantidad')?.value || 1,
+    }));
+}
 
 // ── Activar tooltips ─────────────────────────────────────────────────────────
 document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
@@ -364,6 +583,13 @@ document.querySelectorAll('.res-cell:not(.empty)').forEach(cell => {
 
 function abrirModalReserva(fecha) {
     limpiarErroresModal();
+    document.getElementById('mr_cantidad_adultos').value = '1';
+    document.getElementById('mr_cantidad_estudiantes').value = '0';
+    document.getElementById('mr_cantidad_ninos').value = '0';
+    document.getElementById('mr_pasajeros_container').innerHTML = '';
+    document.getElementById('mr_pasajeros_box').classList.add('d-none');
+    document.getElementById('mr_addons_container').innerHTML = '';
+    document.getElementById('mr_addons_empty').textContent = 'No hay addons cargados para este tour.';
     if (window.setFlatpickrDate) {
         window.setFlatpickrDate(document.getElementById('mr_fecha_inicio'), fecha);
     } else {
@@ -396,6 +622,10 @@ function abrirModalReserva(fecha) {
     if (TOUR_MONEDA) {
         document.getElementById('mr_moneda').value = TOUR_MONEDA;
     }
+
+    sincronizarContadoresReserva();
+    actualizarResumenModalReserva();
+    cargarAddonsReserva();
 
     new bootstrap.Modal(document.getElementById('modalNuevaReserva')).show();
 }
@@ -431,6 +661,8 @@ document.getElementById('btnGuardarReserva').addEventListener('click', async fun
         pago_inicial_monto   : document.getElementById('mr_pago_monto').value || null,
         pago_inicial_metodo  : document.getElementById('mr_pago_metodo').value || null,
         pago_inicial_operacion: document.getElementById('mr_pago_operacion').value || null,
+        pasajeros            : obtenerPasajerosReservaPayload(),
+        addons               : obtenerAddonsReservaPayload(),
     };
 
     try {
@@ -563,7 +795,24 @@ function limpiarFormularioModal() {
             }
         }
     });
+    document.getElementById('mr_num_estudiantes').value = '0';
+    document.getElementById('mr_cantidad_adultos').value = '1';
+    document.getElementById('mr_cantidad_estudiantes').value = '0';
+    document.getElementById('mr_cantidad_ninos').value = '0';
+    document.getElementById('mr_pasajeros_container').innerHTML = '';
+    document.getElementById('mr_pasajeros_box').classList.add('d-none');
+    document.getElementById('mr_addons_container').innerHTML = '';
+    document.getElementById('mr_addons_empty').textContent = 'No hay addons cargados para este tour.';
+    actualizarResumenModalReserva();
 }
+
+document.getElementById('mr_btn_generar_pasajeros')?.addEventListener('click', generarFormulariosPasajerosReserva);
+['mr_cantidad_adultos', 'mr_cantidad_estudiantes', 'mr_cantidad_ninos'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('change', sincronizarContadoresReserva);
+});
+['mr_precio_total', 'mr_descuento', 'mr_pago_monto'].forEach((id) => {
+    document.getElementById(id)?.addEventListener('input', actualizarResumenModalReserva);
+});
 </script>
 </body>
 </html>

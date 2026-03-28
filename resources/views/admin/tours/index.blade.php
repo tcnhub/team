@@ -179,7 +179,8 @@
                                                                     data-tour-precio="{{ $tour->precio_base ?? '' }}"
                                                                     data-tour-dias="{{ $tour->duracion_dias ?? '' }}"
                                                                     data-calendario-url="{{ route('admin.tours.reservas.calendario', $tour) }}"
-                                                                    data-ajax-url="{{ route('admin.tours.reservas.store-ajax', $tour) }}">
+                                                                    data-ajax-url="{{ route('admin.tours.reservas.store-ajax', $tour) }}"
+                                                                    data-addons-url="{{ route('admin.tours.addons.json', $tour) }}">
                                                                 <i class="ri-calendar-check-line"></i>
                                                             </button>
                                                             <a href="{{ route('admin.tours.reservas.calendario', $tour) }}" class="btn btn-sm btn-soft-success" title="Ver reservas en calendario">
@@ -287,15 +288,19 @@
                     {{-- Pasajeros --}}
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Pasajeros</label>
-                        <input type="number" id="nrt_num_pasajeros" class="form-control" value="1" min="1">
+                        <input type="number" id="nrt_num_pasajeros" class="form-control" value="1" min="1" readonly>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Adultos</label>
-                        <input type="number" id="nrt_num_adultos" class="form-control" value="1" min="0">
+                        <input type="number" id="nrt_num_adultos" class="form-control" value="1" min="0" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Estudiantes</label>
+                        <input type="number" id="nrt_num_estudiantes" class="form-control" value="0" min="0" readonly>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label fw-semibold">Niños</label>
-                        <input type="number" id="nrt_num_ninos" class="form-control" value="0" min="0">
+                        <input type="number" id="nrt_num_ninos" class="form-control" value="0" min="0" readonly>
                     </div>
                     {{-- Precio --}}
                     <div class="col-md-3">
@@ -320,6 +325,48 @@
                         <label class="form-label">Notas</label>
                         <textarea id="nrt_notas" class="form-control" rows="2" placeholder="Observaciones..."></textarea>
                     </div>
+                    <div class="col-12">
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-primary mb-0"><i class="ri-group-line me-1"></i>Pasajeros de la reserva</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="nrt_btn_generar_pasajeros">
+                                <i class="ri-layout-grid-line me-1"></i>Generar formularios
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de adultos</label>
+                        <select id="nrt_cantidad_adultos" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}" @selected($i === 1)>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de estudiantes</label>
+                        <select id="nrt_cantidad_estudiantes" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Cantidad de niños</label>
+                        <select id="nrt_cantidad_ninos" class="form-select">
+                            @for($i = 0; $i <= 10; $i++)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </div>
+                    <div class="col-12 d-none" id="nrt_pasajeros_box">
+                        <div id="nrt_pasajeros_container" class="row g-3"></div>
+                    </div>
+                    <div class="col-12">
+                        <hr class="my-1">
+                        <h6 class="text-info mb-2"><i class="ri-service-line me-1"></i>Addons disponibles</h6>
+                        <div id="nrt_addons_container" class="row g-3"></div>
+                        <small id="nrt_addons_empty" class="text-muted">No hay addons cargados para este tour.</small>
+                    </div>
                     {{-- Pago Inicial --}}
                     <div class="col-12">
                         <hr class="my-1">
@@ -341,6 +388,23 @@
                     <div class="col-md-5">
                         <label class="form-label">N° Operación</label>
                         <input type="text" id="nrt_pago_operacion" class="form-control" placeholder="Código Yape, N° transferencia...">
+                    </div>
+                    <div class="col-lg-4 ms-lg-auto">
+                        <div class="card border shadow-none bg-light-subtle mb-0">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0"><i class="ri-file-list-3-line me-1"></i>Resumen de la reserva</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="nrt_resumen_tarifa">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="nrt_resumen_personas">1</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="nrt_resumen_subtotal">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="nrt_resumen_descuento">0.00</span></strong></div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="nrt_resumen_total">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Pago inicial</span><strong>USD <span id="nrt_resumen_inicial">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small"><span class="text-muted">Saldo pendiente</span><strong>USD <span id="nrt_resumen_saldo">0.00</span></strong></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -370,6 +434,161 @@
     const CSRF = document.querySelector('meta[name="csrf-token"]')?.content;
     let currentAjaxUrl    = '';
     let currentCalendario = '';
+    let currentAddonsUrl  = '';
+
+    function badgeTipoReserva(tipo) {
+        if (tipo === 'estudiante') return 'Estudiante';
+        if (tipo === 'nino') return 'Nino';
+        return 'Adulto';
+    }
+
+    function cardPasajeroReserva(index, tipo) {
+        return `
+            <div class="col-12" data-tipo="${tipo}">
+                <div class="border rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Pasajero ${index + 1}</h6>
+                        <span class="badge bg-light text-dark border">${badgeTipoReserva(tipo)}</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><label class="form-label">Nombre</label><input type="text" class="form-control" data-key="nombre"></div>
+                        <div class="col-md-3"><label class="form-label">Apellido</label><input type="text" class="form-control" data-key="apellido"></div>
+                        <div class="col-md-2"><label class="form-label">Tipo Doc.</label><select class="form-select" data-key="tipo_documento"><option value="passport">Passport</option><option value="dni">DNI</option><option value="id">ID</option></select></div>
+                        <div class="col-md-2"><label class="form-label">Documento</label><input type="text" class="form-control" data-key="numero_documento"></div>
+                        <div class="col-md-2"><label class="form-label">Genero</label><select class="form-select" data-key="genero"><option value="">-</option><option value="male">Masculino</option><option value="female">Femenino</option><option value="other">Otro</option></select></div>
+                        <div class="col-md-3"><label class="form-label">Fecha Nacimiento</label><input type="text" class="form-control flatpickr-date" data-date-format="Y-m-d" data-key="fecha_nacimiento"></div>
+                        <div class="col-md-3"><label class="form-label">Email</label><input type="email" class="form-control" data-key="email"></div>
+                        <div class="col-md-3"><label class="form-label">Telefono</label><input type="text" class="form-control" data-key="telefono"></div>
+                        <div class="col-md-3"><label class="form-label">WhatsApp</label><input type="text" class="form-control" data-key="whatsapp"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function sincronizarContadoresNRT() {
+        const adultos = parseInt(document.getElementById('nrt_cantidad_adultos').value || '0', 10);
+        const estudiantes = parseInt(document.getElementById('nrt_cantidad_estudiantes').value || '0', 10);
+        const ninos = parseInt(document.getElementById('nrt_cantidad_ninos').value || '0', 10);
+        document.getElementById('nrt_num_adultos').value = adultos + estudiantes;
+        document.getElementById('nrt_num_estudiantes').value = estudiantes;
+        document.getElementById('nrt_num_ninos').value = ninos;
+        document.getElementById('nrt_num_pasajeros').value = adultos + estudiantes + ninos;
+        actualizarResumenNRT();
+    }
+
+    function actualizarResumenNRT() {
+        const precio = parseFloat(document.getElementById('nrt_precio_total').value || '0');
+        const descuento = parseFloat(document.getElementById('nrt_descuento').value || '0');
+        const pagoInicial = parseFloat(document.getElementById('nrt_pago_monto').value || '0');
+        const personas = parseInt(document.getElementById('nrt_num_pasajeros').value || '0', 10);
+        const subtotal = precio * personas;
+        const addonsTotal = Array.from(document.querySelectorAll('.nrt-addon-check:checked')).reduce((acc, checkbox) => {
+            const monto = parseFloat(checkbox.dataset.monto || '0');
+            const qty = parseInt(checkbox.closest('.border').querySelector('.nrt-addon-cantidad')?.value || '1', 10);
+            return acc + (monto * qty);
+        }, 0);
+        const total = Math.max(0, subtotal + addonsTotal - descuento);
+        const saldo = Math.max(0, total - pagoInicial);
+        document.getElementById('nrt_resumen_tarifa').textContent = precio.toFixed(2);
+        document.getElementById('nrt_resumen_personas').textContent = personas;
+        document.getElementById('nrt_resumen_subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('nrt_resumen_descuento').textContent = descuento.toFixed(2);
+        document.getElementById('nrt_resumen_total').textContent = total.toFixed(2);
+        document.getElementById('nrt_resumen_inicial').textContent = pagoInicial.toFixed(2);
+        document.getElementById('nrt_resumen_saldo').textContent = saldo.toFixed(2);
+    }
+
+    function generarPasajerosNRT() {
+        const container = document.getElementById('nrt_pasajeros_container');
+        const box = document.getElementById('nrt_pasajeros_box');
+        const cantidades = [
+            { tipo: 'adulto', cantidad: parseInt(document.getElementById('nrt_cantidad_adultos').value || '0', 10) },
+            { tipo: 'estudiante', cantidad: parseInt(document.getElementById('nrt_cantidad_estudiantes').value || '0', 10) },
+            { tipo: 'nino', cantidad: parseInt(document.getElementById('nrt_cantidad_ninos').value || '0', 10) },
+        ];
+        let html = '';
+        let index = 0;
+        cantidades.forEach((grupo) => {
+            for (let i = 0; i < grupo.cantidad; i++) {
+                html += cardPasajeroReserva(index, grupo.tipo);
+                index++;
+            }
+        });
+        container.innerHTML = html;
+        box.classList.toggle('d-none', index === 0);
+        container.querySelectorAll('.flatpickr-date').forEach((input) => {
+            if (window.flatpickr && !input._flatpickr) {
+                window.flatpickr(input, { altInput: true, altFormat: 'd/m/Y', dateFormat: 'Y-m-d', allowInput: true, locale: 'es' });
+            }
+        });
+        sincronizarContadoresNRT();
+    }
+
+    function renderAddonsNRT(addons) {
+        const container = document.getElementById('nrt_addons_container');
+        const empty = document.getElementById('nrt_addons_empty');
+        container.innerHTML = '';
+        if (!addons.length) {
+            empty.textContent = 'No hay addons disponibles para este tour.';
+            return;
+        }
+        empty.textContent = '';
+        addons.forEach((addon, index) => {
+            container.insertAdjacentHTML('beforeend', `
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input nrt-addon-check" type="checkbox" id="nrt_addon_${addon.id}" data-monto="${addon.monto}">
+                            <label class="form-check-label fw-semibold" for="nrt_addon_${addon.id}">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</label>
+                        </div>
+                        <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
+                        <input type="hidden" name="nrt_addons[${index}][addon_id]" class="nrt-addon-id-input" value="${addon.id}" disabled>
+                        <label class="form-label small">Cantidad</label>
+                        <input type="number" min="1" class="form-control form-control-sm nrt-addon-cantidad" value="1" disabled>
+                    </div>
+                </div>
+            `);
+        });
+        container.querySelectorAll('.nrt-addon-check').forEach((checkbox) => {
+            checkbox.addEventListener('change', function () {
+                const qtyInput = this.closest('.border').querySelector('.nrt-addon-cantidad');
+                const idInput = this.closest('.border').querySelector('.nrt-addon-id-input');
+                qtyInput.disabled = !this.checked;
+                idInput.disabled = !this.checked;
+                actualizarResumenNRT();
+            });
+        });
+        container.querySelectorAll('.nrt-addon-cantidad').forEach((input) => input.addEventListener('input', actualizarResumenNRT));
+    }
+
+    async function cargarAddonsNRT() {
+        if (!currentAddonsUrl) return;
+        try {
+            const res = await fetch(currentAddonsUrl, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+            const data = await res.json();
+            renderAddonsNRT(data);
+        } catch (e) {
+            document.getElementById('nrt_addons_empty').textContent = 'No se pudieron cargar los addons.';
+        }
+    }
+
+    function pasajerosPayloadNRT() {
+        return Array.from(document.querySelectorAll('#nrt_pasajeros_container [data-tipo]')).map((wrapper) => {
+            const data = { tipo_pasajero: wrapper.dataset.tipo };
+            wrapper.querySelectorAll('[data-key]').forEach((input) => {
+                data[input.dataset.key] = input.value || null;
+            });
+            return data;
+        });
+    }
+
+    function addonsPayloadNRT() {
+        return Array.from(document.querySelectorAll('.nrt-addon-check:checked')).map((checkbox) => ({
+            addon_id: checkbox.id.replace('nrt_addon_', ''),
+            cantidad: checkbox.closest('.border').querySelector('.nrt-addon-cantidad')?.value || 1,
+        }));
+    }
 
     // Open modal when clicking "Nueva Reserva"
     document.querySelectorAll('.btn-nueva-reserva').forEach(function (btn) {
@@ -381,6 +600,7 @@
 
             currentAjaxUrl    = this.dataset.ajaxUrl;
             currentCalendario = this.dataset.calendarioUrl;
+            currentAddonsUrl  = this.dataset.addonsUrl || '';
 
             // Reset form
             document.getElementById('nrtTourNombre').textContent = tourNombre;
@@ -402,6 +622,14 @@
             document.getElementById('nrt_pago_monto').value     = '';
             document.getElementById('nrt_pago_metodo').value    = '';
             document.getElementById('nrt_pago_operacion').value = '';
+            document.getElementById('nrt_num_estudiantes').value = '0';
+            document.getElementById('nrt_cantidad_adultos').value = '1';
+            document.getElementById('nrt_cantidad_estudiantes').value = '0';
+            document.getElementById('nrt_cantidad_ninos').value = '0';
+            document.getElementById('nrt_pasajeros_container').innerHTML = '';
+            document.getElementById('nrt_pasajeros_box').classList.add('d-none');
+            document.getElementById('nrt_addons_container').innerHTML = '';
+            document.getElementById('nrt_addons_empty').textContent = 'No hay addons cargados para este tour.';
             document.getElementById('nrtAlertError').classList.add('d-none');
 
             // Auto-calc fecha_fin when fecha_inicio changes
@@ -420,6 +648,10 @@
             };
             fi.oninput = syncFechaFin;
             fi.onchange = syncFechaFin;
+
+            sincronizarContadoresNRT();
+            actualizarResumenNRT();
+            cargarAddonsNRT();
 
             new bootstrap.Modal(document.getElementById('modalNuevaReservaTour')).show();
         });
@@ -449,6 +681,8 @@
             pago_inicial_monto    : document.getElementById('nrt_pago_monto').value || null,
             pago_inicial_metodo   : document.getElementById('nrt_pago_metodo').value || null,
             pago_inicial_operacion: document.getElementById('nrt_pago_operacion').value || null,
+            pasajeros             : pasajerosPayloadNRT(),
+            addons                : addonsPayloadNRT(),
         };
 
         try {
@@ -480,6 +714,14 @@
             spinner.classList.add('d-none');
             document.getElementById('btnGuardarNRT').disabled = false;
         }
+    });
+
+    document.getElementById('nrt_btn_generar_pasajeros')?.addEventListener('click', generarPasajerosNRT);
+    ['nrt_cantidad_adultos', 'nrt_cantidad_estudiantes', 'nrt_cantidad_ninos'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('change', sincronizarContadoresNRT);
+    });
+    ['nrt_precio_total', 'nrt_descuento', 'nrt_pago_monto'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('input', actualizarResumenNRT);
     });
 })();
 </script>

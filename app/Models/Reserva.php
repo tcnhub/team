@@ -123,6 +123,13 @@ class Reserva extends Model
         return $this->hasMany(Pasajero::class);
     }
 
+    public function addons()
+    {
+        return $this->belongsToMany(Addon::class, 'addon_reserva')
+            ->withPivot(['cantidad', 'monto_unitario', 'monto_total'])
+            ->withTimestamps();
+    }
+
     /**
      * Relación con Grupo/Biblia (opcional)
      * Si más adelante vinculas la reserva con una Biblia/Grupo

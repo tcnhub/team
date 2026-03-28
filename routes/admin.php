@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\Auth\LoginController as AdminLoginController;
 use App\Http\Controllers\Admin\AgenteController;
+use App\Http\Controllers\Admin\AddonController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\ClienteController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -33,6 +34,7 @@ Route::prefix('admin')
 
             // ── Tours ──────────────────────────────────────────────────────
             Route::resource('tours', TourController::class);
+            Route::get('tours/{tour}/addons-json', [TourController::class, 'addonsJson'])->name('tours.addons.json');
 
             // Calendario de disponibilidad por tour
             Route::prefix('tours/{tour}/calendar')->name('tours.calendar.')->group(function () {
@@ -67,11 +69,18 @@ Route::prefix('admin')
                 ->name('reservas.pasajeros.store-ajax');
             Route::post('reservas/{reserva}/pasajeros-bulk-ajax', [ReservaController::class, 'storePasajerosBulkAjax'])
                 ->name('reservas.pasajeros.bulk-store-ajax');
+            Route::get('reservas/{reserva}/pasajeros/{pasajero}/edit-ajax', [ReservaController::class, 'editPasajeroAjax'])
+                ->name('reservas.pasajeros.edit-ajax');
+            Route::match(['put', 'patch'], 'reservas/{reserva}/pasajeros/{pasajero}/update-ajax', [ReservaController::class, 'updatePasajeroAjax'])
+                ->name('reservas.pasajeros.update-ajax');
+            Route::delete('reservas/{reserva}/pasajeros/{pasajero}/destroy-ajax', [ReservaController::class, 'destroyPasajeroAjax'])
+                ->name('reservas.pasajeros.destroy-ajax');
             Route::get('tours/{tour}/availabilities-json', [ReservaController::class, 'availabilitiesPorTour'])
                 ->name('tours.availabilities.json');
 
             // ── Clientes ───────────────────────────────────────────────────
             Route::resource('clientes', ClienteController::class);
+            Route::resource('addons', AddonController::class);
             Route::resource('pasajeros', PasajeroController::class);
             Route::get('pasajeros/reservas/{reserva}/relacion', [PasajeroController::class, 'reservaRelacion'])
                 ->name('pasajeros.reserva-relacion');

@@ -91,6 +91,21 @@
             </select>
         </div>
 
+        <div class="col-md-6">
+            <label class="form-label">Addons Disponibles</label>
+            <select name="addons[]" class="form-select" multiple>
+                @php
+                    $addonsSeleccionados = collect(old('addons', isset($tour) ? $tour->addons->pluck('id')->all() : []))->map(fn($id) => (int) $id)->all();
+                @endphp
+                @foreach($addons ?? [] as $addon)
+                    <option value="{{ $addon->id }}" {{ in_array($addon->id, $addonsSeleccionados, true) ? 'selected' : '' }}>
+                        {{ $addon->nombre }} · USD {{ number_format($addon->monto, 2) }}
+                    </option>
+                @endforeach
+            </select>
+            <div class="form-text">Estos addons serán los disponibles al registrar reservas de este tour.</div>
+        </div>
+
         <div class="col-12">
             <label class="form-label">Descripción Corta</label>
             <textarea name="descripcion_corta" class="form-control" rows="2">{{ old('descripcion_corta', $tour->descripcion_corta ?? '') }}</textarea>

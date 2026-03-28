@@ -99,6 +99,7 @@
                             <li class="nav-item"><a href="{{ route('admin.tours.index')}}" class="nav-link">Lista de Tours</a></li>
                             <li class="nav-item"><a href="{{ route('admin.tours.create')}}" class="nav-link">Nuevo Tour</a></li>
                             <li class="nav-item"><a href="{{ route('admin.categorias.index')}}" class="nav-link">Categorías</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.addons.index')}}" class="nav-link">Addons</a></li>
                         </ul>
                     </div>
                 </li>

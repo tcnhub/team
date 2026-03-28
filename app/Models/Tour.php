@@ -83,6 +83,11 @@ class Tour extends Model
         return $this->hasMany(Pasajero::class);
     }
 
+    public function addons()
+    {
+        return $this->belongsToMany(Addon::class, 'addon_tour')->withTimestamps();
+    }
+
     /**
      * Accessor: capacidad diaria por defecto (usa max_personas)
      */

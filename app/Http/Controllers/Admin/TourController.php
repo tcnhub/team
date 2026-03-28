@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Addon;
 use App\Models\Agente;
 use App\Models\Categoria;
 use App\Models\Cliente;
@@ -54,8 +55,9 @@ class TourController extends Controller
     public function create()
     {
         $categorias = Categoria::where('estado', true)->orderBy('nombre')->get();
+        $addons = Addon::orderBy('nombre')->get();
 
-        return view('admin.tours.create', compact('categorias'));
+        return view('admin.tours.create', compact('categorias', 'addons'));
     }
 
     public function store(Request $request)
@@ -66,6 +68,7 @@ class TourController extends Controller
 
         $tour = Tour::create($validated);
         $tour->categorias()->sync($request->input('categorias', []));
+        $tour->addons()->sync($request->input('addons', []));
 
         return redirect()
             ->route('admin.tours.index')
@@ -74,7 +77,7 @@ class TourController extends Controller
 
     public function show(Tour $tour)
     {
-        $tour->load(['categorias', 'precios', 'calendarYears', 'pasajeros.cliente', 'reservas.cliente']);
+        $tour->load(['categorias', 'addons', 'precios', 'calendarYears', 'pasajeros.cliente', 'reservas.cliente']);
 
         return view('admin.tours.show', compact('tour'));
     }
@@ -82,9 +85,10 @@ class TourController extends Controller
     public function edit(Tour $tour)
     {
         $categorias = Categoria::where('estado', true)->orderBy('nombre')->get();
-        $tour->load('categorias');
+        $addons = Addon::orderBy('nombre')->get();
+        $tour->load(['categorias', 'addons']);
 
-        return view('admin.tours.edit', compact('tour', 'categorias'));
+        return view('admin.tours.edit', compact('tour', 'categorias', 'addons'));
     }
 
     public function update(Request $request, Tour $tour)
@@ -95,6 +99,7 @@ class TourController extends Controller
 
         $tour->update($validated);
         $tour->categorias()->sync($request->input('categorias', []));
+        $tour->addons()->sync($request->input('addons', []));
 
         return redirect()
             ->route('admin.tours.index')
@@ -125,6 +130,13 @@ class TourController extends Controller
         return back()->with('success', 'Estado del tour actualizado.');
     }
 
+    public function addonsJson(Tour $tour)
+    {
+        return response()->json(
+            $tour->addons()->orderBy('nombre')->get(['addons.id', 'addons.nombre', 'addons.descripcion', 'addons.monto'])
+        );
+    }
+
     private function validateTour(Request $request, ?int $tourId = null): array
     {
         return $request->validate([
@@ -145,6 +157,8 @@ class TourController extends Controller
             'itinerario'        => 'nullable|array',
             'categorias'        => 'nullable|array',
             'categorias.*'      => 'exists:categorias,id',
+            'addons'            => 'nullable|array',
+            'addons.*'          => 'exists:addons,id',
             'estado'            => 'nullable|boolean',
             'destacado'         => 'nullable|boolean',
         ]);
