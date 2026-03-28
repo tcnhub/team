@@ -205,7 +205,7 @@ class TourCalendarController extends Controller
 
         // Para el modal de nueva reserva
         $clientes = Cliente::where('activo', true)->orderBy('nombre_completo')->get(['id', 'nombre_completo', 'numero_documento']);
-        $agentes  = Agente::where('estado', 'activo')->get(['id', 'nombres', 'apellidos']);
+        $agentes  = Agente::where('estado', true)->get(['id', 'nombres', 'apellidos']);
 
         return view('admin.tours.reservas-calendario', compact(
             'tour', 'reservas', 'mapaFechas', 'anio', 'aniosDisponibles', 'clientes', 'agentes'

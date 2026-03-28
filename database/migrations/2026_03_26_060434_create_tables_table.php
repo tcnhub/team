@@ -47,7 +47,7 @@ return new class extends Migration
             $table->string('descripcion')->nullable();
             $table->string('color')->nullable();
             $table->string('icono')->nullable();
-            $table->boolean('activo')->default(true);
+            $table->boolean('estado')->default(true);
             $table->timestamps();
         });
 
@@ -71,7 +71,7 @@ return new class extends Migration
             $table->text('no_incluye')->nullable();
             $table->json('itinerario')->nullable();
             $table->json('galeria_imagenes')->nullable();
-            $table->enum('estado', ['Activo', 'Inactivo', 'Agotado', 'Cancelado'])->default('Activo');
+            $table->boolean('estado')->default(true);
             $table->boolean('destacado')->default(false);
             $table->timestamps();
         });
@@ -279,8 +279,7 @@ return new class extends Migration
             $table->enum('genero', ['masculino', 'femenino', 'otro'])->nullable();
 
             // Estado del agente
-            $table->enum('estado', ['activo', 'inactivo', 'vacaciones', 'baja'])
-                ->default('activo');
+            $table->boolean('estado')->default(true);
 
             // Información laboral
             $table->date('fecha_ingreso')->nullable();
@@ -368,6 +367,41 @@ return new class extends Migration
             // Timestamps automáticos
             $table->timestamps();   // created_at y updated_at
             $table->softDeletes();  // deleted_at (recomendado para reservas)
+        });
+
+        Schema::create('pasajeros', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('cliente_id')->constrained('clientes')->cascadeOnDelete();
+            $table->foreignId('reserva_id')->constrained('reservas')->cascadeOnDelete();
+            $table->foreignId('tour_id')->constrained('tours')->cascadeOnDelete();
+
+            $table->string('nombre');
+            $table->string('apellido');
+            $table->string('nombre_completo')->nullable();
+            $table->enum('tipo_documento', ['passport', 'dni', 'id'])->default('passport');
+            $table->string('numero_documento')->unique();
+
+            $table->foreignId('pais_id')->nullable()->constrained('paises')->nullOnDelete();
+            $table->foreignId('idioma_id')->nullable()->constrained('idiomas')->nullOnDelete();
+            $table->foreignId('dieta_id')->nullable()->constrained('dietas')->nullOnDelete();
+
+            $table->string('email')->nullable();
+            $table->string('telefono')->nullable();
+            $table->string('whatsapp')->nullable();
+            $table->date('fecha_nacimiento')->nullable();
+            $table->enum('genero', ['male', 'female', 'other'])->nullable();
+            $table->integer('edad')->nullable();
+            $table->text('notas_medicas')->nullable();
+            $table->date('pasaporte_expiracion')->nullable();
+            $table->string('pasaporte_imagen')->nullable();
+            $table->string('tam_peru')->nullable();
+            $table->string('contacto_emergencia')->nullable();
+            $table->string('telefono_emergencia')->nullable();
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+
+            $table->index(['cliente_id', 'reserva_id', 'tour_id']);
         });
 
 
@@ -636,9 +670,10 @@ return new class extends Migration
         Schema::dropIfExists('paises');
         Schema::dropIfExists('idiomas');
         Schema::dropIfExists('dietas');
+        Schema::dropIfExists('reservas');
+        Schema::dropIfExists('pasajeros');
         Schema::dropIfExists('agentes');
         Schema::dropIfExists('clientes');
-        Schema::dropIfExists('reservas');
         Schema::dropIfExists('tipo_proveedores');
         Schema::dropIfExists('tour_availability');
         Schema::dropIfExists('tour_calendar_years');

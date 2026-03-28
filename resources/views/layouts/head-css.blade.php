@@ -7,3 +7,4 @@
 <link href="{{ asset('assets/css/app.min.css') }}" rel="stylesheet" type="text/css" />
 
 <link href="{{ asset('assets/css/custom.min.css') }}" rel="stylesheet" type="text/css" />
+<link href="{{ asset('assets/libs/flatpickr/flatpickr.min.css') }}" rel="stylesheet" type="text/css" />

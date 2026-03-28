@@ -49,8 +49,9 @@
     {{-- ── Fecha de Pago ── --}}
     <div class="col-md-4">
         <label class="form-label fw-semibold">Fecha de Pago <span class="text-danger">*</span></label>
-        <input type="date" name="fecha_pago"
-               class="form-control @error('fecha_pago') is-invalid @enderror"
+        <input type="text" name="fecha_pago"
+               data-date-format="Y-m-d"
+               class="form-control flatpickr-date @error('fecha_pago') is-invalid @enderror"
                value="{{ $editando ? $pago->fecha_pago->format('Y-m-d') : old('fecha_pago', date('Y-m-d')) }}" required>
         @error('fecha_pago')
         <div class="invalid-feedback">{{ $message }}</div>

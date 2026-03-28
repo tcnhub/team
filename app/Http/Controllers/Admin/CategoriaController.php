@@ -17,6 +17,10 @@ class CategoriaController extends Controller
                 ->orWhere('descripcion', 'like', "%{$request->buscar}%");
         }
 
+        if ($request->filled('estado')) {
+            $query->where('estado', $request->estado === '1');
+        }
+
         $categorias = $query->latest()->paginate(15);
 
         return view('admin.categorias.index', compact('categorias'));
@@ -34,10 +38,10 @@ class CategoriaController extends Controller
             'descripcion' => 'nullable|string|max:500',
             'color'       => 'nullable|string|max:20',
             'icono'       => 'nullable|string|max:100',
-            'activo'      => 'nullable|boolean',
+            'estado'      => 'nullable|boolean',
         ]);
 
-        $validated['activo'] = $request->boolean('activo', true);
+        $validated['estado'] = $request->boolean('estado', true);
 
         Categoria::create($validated);
 
@@ -64,10 +68,10 @@ class CategoriaController extends Controller
             'descripcion' => 'nullable|string|max:500',
             'color'       => 'nullable|string|max:20',
             'icono'       => 'nullable|string|max:100',
-            'activo'      => 'nullable|boolean',
+            'estado'      => 'nullable|boolean',
         ]);
 
-        $validated['activo'] = $request->boolean('activo', true);
+        $validated['estado'] = $request->boolean('estado', true);
 
         $categoria->update($validated);
 

@@ -118,6 +118,11 @@ class Reserva extends Model
         return $this->hasMany(Pago::class, 'reserva_id');
     }
 
+    public function pasajeros()
+    {
+        return $this->hasMany(Pasajero::class);
+    }
+
     /**
      * Relación con Grupo/Biblia (opcional)
      * Si más adelante vinculas la reserva con una Biblia/Grupo

@@ -62,9 +62,9 @@ class ReservaController extends Controller
             ->orderBy('nombre_completo')
             ->get();
 
-        $agentes = Agente::where('estado', 'activo')->get();
+        $agentes = Agente::where('estado', true)->get();
         $paises  = Pais::orderBy('nombre')->get();
-        $tours   = Tour::where('estado', 'Activo')->orderBy('nombre_tour')->get();
+        $tours   = Tour::where('estado', true)->orderBy('nombre_tour')->get();
 
         return view('admin.reservas.create', compact('clientes', 'agentes', 'paises', 'tours'));
     }
@@ -173,7 +173,7 @@ class ReservaController extends Controller
      */
     public function show(Reserva $reserva)
     {
-        $reserva->load(['cliente', 'agente', 'tour', 'pagos']);
+        $reserva->load(['cliente', 'agente', 'tour', 'pagos', 'pasajeros.cliente']);
 
         // Cargar availability solo si existe
         if ($reserva->availability_id) {
@@ -189,8 +189,8 @@ class ReservaController extends Controller
     public function edit(Reserva $reserva)
     {
         $clientes = Cliente::where('activo', true)->get();
-        $agentes  = Agente::where('estado', 'activo')->get();
-        $tours    = Tour::where('estado', 'Activo')->orderBy('nombre_tour')->get();
+        $agentes  = Agente::where('estado', true)->get();
+        $tours    = Tour::where('estado', true)->orderBy('nombre_tour')->get();
 
         // Availabilities del tour seleccionado (o vacío)
         $availabilities = collect();

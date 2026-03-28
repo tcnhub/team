@@ -140,8 +140,9 @@
         <!-- Fecha de Nacimiento -->
         <div class="col-md-4">
             <label class="form-label">Fecha de Nacimiento</label>
-            <input type="date" name="fecha_nacimiento"
-                   class="form-control @error('fecha_nacimiento') is-invalid @enderror"
+            <input type="text" name="fecha_nacimiento"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_nacimiento') is-invalid @enderror"
                    value="{{ isset($cliente) && $cliente->fecha_nacimiento ? $cliente->fecha_nacimiento->format('Y-m-d') : old('fecha_nacimiento') }}">
             @error('fecha_nacimiento')
             <div class="invalid-feedback">{{ $message }}</div>
@@ -165,8 +166,9 @@
         <!-- Pasaporte Expiración -->
         <div class="col-md-5">
             <label class="form-label">Pasaporte Expiración</label>
-            <input type="date" name="pasaporte_expiracion"
-                   class="form-control @error('pasaporte_expiracion') is-invalid @enderror"
+            <input type="text" name="pasaporte_expiracion"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('pasaporte_expiracion') is-invalid @enderror"
                    value="{{ isset($cliente) && $cliente->pasaporte_expiracion ? $cliente->pasaporte_expiracion->format('Y-m-d') : old('pasaporte_expiracion') }}">
             @error('pasaporte_expiracion')
             <div class="invalid-feedback">{{ $message }}</div>

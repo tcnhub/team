@@ -67,7 +67,7 @@
                                         <!-- Fecha de Inicio -->
                                         <div class="col-md-2">
                                             <label class="form-label fw-semibold">Fecha Inicio</label>
-                                            <input type="date" name="fecha_inicio" class="form-control"
+                                            <input type="text" name="fecha_inicio" class="form-control flatpickr-date" data-date-format="Y-m-d"
                                                    value="{{ request('fecha_inicio') }}">
                                         </div>
 

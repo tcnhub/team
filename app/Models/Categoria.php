@@ -19,14 +19,14 @@ class Categoria extends Model
         'descripcion',
         'color',
         'icono',
-        'activo',
+        'estado',
     ];
 
     /**
      * Casts para tipos de datos
      */
     protected $casts = [
-        'activo' => 'boolean',
+        'estado' => 'boolean',
     ];
 
     /**
@@ -47,7 +47,7 @@ class Categoria extends Model
      */
     public function scopeActivas($query)
     {
-        return $query->where('activo', true);
+        return $query->where('estado', true);
     }
 
     /**

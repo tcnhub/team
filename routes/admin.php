@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\DietaController;
 use App\Http\Controllers\Admin\IdiomaController;
 use App\Http\Controllers\Admin\PagoController;
 use App\Http\Controllers\Admin\PaisController;
+use App\Http\Controllers\Admin\PasajeroController;
 use App\Http\Controllers\Admin\ReservaController;
 use App\Http\Controllers\Admin\TourAvailabilityController;
 use App\Http\Controllers\Admin\TourCalendarController;
@@ -67,6 +68,7 @@ Route::prefix('admin')
 
             // ── Clientes ───────────────────────────────────────────────────
             Route::resource('clientes', ClienteController::class);
+            Route::resource('pasajeros', PasajeroController::class);
             Route::get('clientes/buscar-documento', [ClienteController::class, 'buscarPorDocumento'])
                 ->name('clientes.buscar-documento');
             Route::post('clientes/store-quick', [ClienteController::class, 'storeQuick'])

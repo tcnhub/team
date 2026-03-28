@@ -52,10 +52,8 @@
                                     </div>
                                     <select name="estado" class="form-select form-select-sm" style="max-width:160px" onchange="this.form.submit()">
                                         <option value="">Todos los estados</option>
-                                        <option value="activo" {{ request('estado') == 'activo' ? 'selected' : '' }}>Activo</option>
-                                        <option value="inactivo" {{ request('estado') == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
-                                        <option value="vacaciones" {{ request('estado') == 'vacaciones' ? 'selected' : '' }}>Vacaciones</option>
-                                        <option value="baja" {{ request('estado') == 'baja' ? 'selected' : '' }}>Baja</option>
+                                        <option value="1" {{ request('estado') === '1' ? 'selected' : '' }}>Activos</option>
+                                        <option value="0" {{ request('estado') === '0' ? 'selected' : '' }}>Inactivos</option>
                                     </select>
                                     @if(request()->hasAny(['buscar','estado']))
                                         <a href="{{ route('admin.agentes.index') }}" class="btn btn-outline-danger btn-sm">
@@ -92,16 +90,8 @@
                                                     <td>{{ $agente->departamento ?? '—' }}</td>
                                                     <td>{{ number_format($agente->comision_porcentaje, 1) }}%</td>
                                                     <td>
-                                                        @php
-                                                            $estadoClases = [
-                                                                'activo'     => 'bg-success-subtle text-success border border-success-subtle',
-                                                                'inactivo'   => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                                                'vacaciones' => 'bg-info-subtle text-info border border-info-subtle',
-                                                                'baja'       => 'bg-danger-subtle text-danger border border-danger-subtle',
-                                                            ];
-                                                        @endphp
-                                                        <span class="badge {{ $estadoClases[$agente->estado] ?? '' }}">
-                                                            {{ ucfirst($agente->estado) }}
+                                                        <span class="badge {{ $agente->estado ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }}">
+                                                            {{ $agente->estado ? 'Activo' : 'Inactivo' }}
                                                         </span>
                                                     </td>
                                                     <td class="text-center">

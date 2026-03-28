@@ -23,7 +23,7 @@ class AgenteController extends Controller
         }
 
         if ($request->filled('estado')) {
-            $query->where('estado', $request->estado);
+            $query->where('estado', $request->estado === '1');
         }
 
         $agentes = $query->latest()->paginate(15);
@@ -51,13 +51,15 @@ class AgenteController extends Controller
             'ciudad'              => 'nullable|string|max:100',
             'pais'                => 'nullable|string|max:100',
             'genero'              => ['nullable', Rule::in(['masculino', 'femenino', 'otro'])],
-            'estado'              => ['required', Rule::in(['activo', 'inactivo', 'vacaciones', 'baja'])],
+            'estado'              => ['nullable', 'boolean'],
             'fecha_ingreso'       => 'nullable|date',
             'fecha_salida'        => 'nullable|date|after_or_equal:fecha_ingreso',
             'comision_porcentaje' => 'nullable|numeric|min:0|max:100',
             'departamento'        => 'nullable|string|max:100',
             'notas'               => 'nullable|string',
         ]);
+
+        $validated['estado'] = $request->boolean('estado', true);
 
         Agente::create($validated);
 
@@ -92,13 +94,15 @@ class AgenteController extends Controller
             'ciudad'              => 'nullable|string|max:100',
             'pais'                => 'nullable|string|max:100',
             'genero'              => ['nullable', Rule::in(['masculino', 'femenino', 'otro'])],
-            'estado'              => ['required', Rule::in(['activo', 'inactivo', 'vacaciones', 'baja'])],
+            'estado'              => ['nullable', 'boolean'],
             'fecha_ingreso'       => 'nullable|date',
             'fecha_salida'        => 'nullable|date|after_or_equal:fecha_ingreso',
             'comision_porcentaje' => 'nullable|numeric|min:0|max:100',
             'departamento'        => 'nullable|string|max:100',
             'notas'               => 'nullable|string',
         ]);
+
+        $validated['estado'] = $request->boolean('estado', true);
 
         $agente->update($validated);
 

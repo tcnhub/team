@@ -92,8 +92,9 @@
         <!-- Fecha Nacimiento -->
         <div class="col-md-3">
             <label class="form-label">Fecha de Nacimiento</label>
-            <input type="date" name="fecha_nacimiento"
-                   class="form-control @error('fecha_nacimiento') is-invalid @enderror"
+            <input type="text" name="fecha_nacimiento"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_nacimiento') is-invalid @enderror"
                    value="{{ isset($agente) && $agente->fecha_nacimiento ? $agente->fecha_nacimiento->format('Y-m-d') : old('fecha_nacimiento') }}">
             @error('fecha_nacimiento')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -116,16 +117,14 @@
 
         <!-- Estado -->
         <div class="col-md-3">
-            <label class="form-label">Estado <span class="text-danger">*</span></label>
-            <select name="estado" class="form-select @error('estado') is-invalid @enderror" required>
-                <option value="activo" {{ (isset($agente) && $agente->estado == 'activo') || old('estado', 'activo') == 'activo' ? 'selected' : '' }}>Activo</option>
-                <option value="inactivo" {{ (isset($agente) && $agente->estado == 'inactivo') || old('estado') == 'inactivo' ? 'selected' : '' }}>Inactivo</option>
-                <option value="vacaciones" {{ (isset($agente) && $agente->estado == 'vacaciones') || old('estado') == 'vacaciones' ? 'selected' : '' }}>Vacaciones</option>
-                <option value="baja" {{ (isset($agente) && $agente->estado == 'baja') || old('estado') == 'baja' ? 'selected' : '' }}>Baja</option>
-            </select>
-            @error('estado')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label class="form-label">Estado</label>
+            <div class="form-check form-switch mt-2">
+                <input type="hidden" name="estado" value="0">
+                <input type="checkbox" name="estado" id="estado"
+                       value="1" class="form-check-input"
+                       {{ (isset($agente) ? $agente->estado : old('estado', true)) ? 'checked' : '' }}>
+                <label class="form-check-label" for="estado">Agente activo</label>
+            </div>
         </div>
 
         <!-- Departamento -->
@@ -187,8 +186,9 @@
         <!-- Fechas laborales -->
         <div class="col-md-3">
             <label class="form-label">Fecha de Ingreso</label>
-            <input type="date" name="fecha_ingreso"
-                   class="form-control @error('fecha_ingreso') is-invalid @enderror"
+            <input type="text" name="fecha_ingreso"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_ingreso') is-invalid @enderror"
                    value="{{ isset($agente) && $agente->fecha_ingreso ? $agente->fecha_ingreso->format('Y-m-d') : old('fecha_ingreso') }}">
             @error('fecha_ingreso')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -197,8 +197,9 @@
 
         <div class="col-md-3">
             <label class="form-label">Fecha de Salida</label>
-            <input type="date" name="fecha_salida"
-                   class="form-control @error('fecha_salida') is-invalid @enderror"
+            <input type="text" name="fecha_salida"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_salida') is-invalid @enderror"
                    value="{{ isset($agente) && $agente->fecha_salida ? $agente->fecha_salida->format('Y-m-d') : old('fecha_salida') }}">
             @error('fecha_salida')
                 <div class="invalid-feedback">{{ $message }}</div>

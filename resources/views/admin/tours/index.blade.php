@@ -96,10 +96,8 @@
                                             <label class="form-label fw-semibold">Estado</label>
                                             <select name="estado" class="form-select">
                                                 <option value="">Todos</option>
-                                                <option value="Activo" {{ request('estado') === 'Activo' ? 'selected' : '' }}>Activo</option>
-                                                <option value="Inactivo" {{ request('estado') === 'Inactivo' ? 'selected' : '' }}>Inactivo</option>
-                                                <option value="Agotado" {{ request('estado') === 'Agotado' ? 'selected' : '' }}>Agotado</option>
-                                                <option value="Cancelado" {{ request('estado') === 'Cancelado' ? 'selected' : '' }}>Cancelado</option>
+                                                <option value="1" {{ request('estado') === '1' ? 'selected' : '' }}>Activo</option>
+                                                <option value="0" {{ request('estado') === '0' ? 'selected' : '' }}>Inactivo</option>
                                             </select>
                                         </div>
                                     </div>
@@ -163,18 +161,9 @@
                                                         @endif
                                                     </td>
                                                     <td>
-                                                        @php
-                                                            $estadoClass = match($tour->estado) {
-                                                                'Activo' => 'text-success',
-                                                                'Inactivo' => 'text-muted',
-                                                                'Agotado' => 'text-warning',
-                                                                'Cancelado' => 'text-danger',
-                                                                default => 'text-secondary'
-                                                            };
-                                                        @endphp
-                                                        <span class="{{ $estadoClass }}">
+                                                        <span class="{{ $tour->estado ? 'text-success' : 'text-danger' }}">
                                                             <i class="ri-checkbox-circle-line fs-17 align-middle"></i>
-                                                            {{ $tour->estado }}
+                                                            {{ $tour->estado ? 'Activo' : 'Inactivo' }}
                                                         </span>
                                                     </td>
                                                     <td>
@@ -287,13 +276,13 @@
                     {{-- Fecha Inicio --}}
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Fecha Inicio <span class="text-danger">*</span></label>
-                        <input type="date" id="nrt_fecha_inicio" class="form-control">
+                        <input type="text" id="nrt_fecha_inicio" class="form-control flatpickr-date" data-date-format="Y-m-d">
                         <div class="invalid-feedback" id="err_nrt_fecha_inicio"></div>
                     </div>
                     {{-- Fecha Fin --}}
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Fecha Fin</label>
-                        <input type="date" id="nrt_fecha_fin" class="form-control">
+                        <input type="text" id="nrt_fecha_fin" class="form-control flatpickr-date" data-date-format="Y-m-d">
                     </div>
                     {{-- Pasajeros --}}
                     <div class="col-md-2">

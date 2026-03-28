@@ -30,15 +30,9 @@
                             <h4 class="mb-0">{{ $tour->nombre_tour }}</h4>
                             <span class="text-muted small">{{ $tour->codigo_tour }}</span>
                         </div>
-                        @php
-                            $estadoClases = [
-                                'Activo'    => 'bg-success-subtle text-success border border-success-subtle',
-                                'Inactivo'  => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                'Agotado'   => 'bg-warning-subtle text-warning border border-warning-subtle',
-                                'Cancelado' => 'bg-danger-subtle text-danger border border-danger-subtle',
-                            ];
-                        @endphp
-                        <span class="badge {{ $estadoClases[$tour->estado] ?? '' }}">{{ $tour->estado }}</span>
+                        <span class="badge {{ $tour->estado ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }}">
+                            {{ $tour->estado ? 'Activo' : 'Inactivo' }}
+                        </span>
                         @if($tour->destacado)
                             <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
                                 <i class="ri-star-fill me-1"></i>Destacado
@@ -249,6 +243,49 @@
                             </div>
                         @endif
 
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Pasajeros vinculados</h5>
+                            </div>
+                            <div class="card-body">
+                                @forelse($tour->pasajeros->take(8) as $pasajero)
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <div>
+                                            <a href="{{ route('admin.pasajeros.show', $pasajero) }}" class="fw-medium">{{ $pasajero->nombre_completo }}</a>
+                                            <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
+                                        </div>
+                                        <a href="{{ route('admin.clientes.show', $pasajero->cliente) }}" class="small">Cliente</a>
+                                    </div>
+                                @empty
+                                    <div class="text-muted">Sin pasajeros vinculados.</div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Reservas recientes</h5>
+                            </div>
+                            <div class="card-body">
+                                @forelse($tour->reservas->take(8) as $reserva)
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <div>
+                                            <a href="{{ route('admin.reservas.show', $reserva) }}" class="fw-medium">{{ $reserva->codigo_reserva }}</a>
+                                            <div class="text-muted small">{{ $reserva->cliente?->nombre_completo ?? 'Sin cliente' }}</div>
+                                        </div>
+                                        <span class="small">{{ $reserva->fecha_inicio?->format('d/m/Y') }}</span>
+                                    </div>
+                                @empty
+                                    <div class="text-muted">Sin reservas vinculadas.</div>
+                                @endforelse
+                            </div>
+                        </div>
                     </div>
                 </div>
 

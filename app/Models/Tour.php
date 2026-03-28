@@ -36,6 +36,7 @@ class Tour extends Model
     protected $casts = [
         'itinerario'        => 'array',
         'galeria_imagenes'  => 'array',
+        'estado'            => 'boolean',
         'destacado'         => 'boolean',
         'precio_base'       => 'decimal:2',
     ];
@@ -72,6 +73,16 @@ class Tour extends Model
         return $this->hasMany(TourAvailability::class, 'tour_id');
     }
 
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'tour_id');
+    }
+
+    public function pasajeros()
+    {
+        return $this->hasMany(Pasajero::class);
+    }
+
     /**
      * Accessor: capacidad diaria por defecto (usa max_personas)
      */
@@ -101,7 +112,7 @@ class Tour extends Model
      */
     public function scopeActivos($query)
     {
-        return $query->where('estado', 'Activo');
+        return $query->where('estado', true);
     }
 
     public function scopeDestacados($query)

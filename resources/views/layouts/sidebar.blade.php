@@ -154,6 +154,8 @@
                         <ul class="nav nav-sm flex-column">
                             <li class="nav-item"><a href="{{ route('admin.clientes.index')}}" class="nav-link">Lista de Clientes</a></li>
                             <li class="nav-item"><a href="{{ route('admin.clientes.create')}}" class="nav-link">Nuevo Cliente</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.pasajeros.index')}}" class="nav-link">Lista de Pasajeros</a></li>
+                            <li class="nav-item"><a href="{{ route('admin.pasajeros.create')}}" class="nav-link">Nuevo Pasajero</a></li>
                             <li class="nav-item"><a href="{{ route('admin.dietas.index')}}" class="nav-link">Dietas</a></li>
                             <li class="nav-item"><a href="{{ route('admin.idiomas.index')}}" class="nav-link">Idiomas</a></li>
                             <li class="nav-item"><a href="{{ route('admin.paises.index')}}" class="nav-link">Países</a></li>

@@ -39,6 +39,7 @@ class Agente extends Model
         'fecha_nacimiento' => 'date',
         'fecha_ingreso'    => 'date',
         'fecha_salida'     => 'date',
+        'estado'           => 'boolean',
         'comision_porcentaje' => 'decimal:2',
     ];
 
@@ -51,7 +52,7 @@ class Agente extends Model
     // Scopes
     public function scopeActivos($query)
     {
-        return $query->where('estado', 'activo');
+        return $query->where('estado', true);
     }
 
     // Relaciones

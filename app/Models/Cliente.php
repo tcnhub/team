@@ -69,4 +69,9 @@ class Cliente extends Model
 
     public function reservas() { return $this->hasMany(Reserva::class, 'id_cliente'); }
 
+    public function pasajeros()
+    {
+        return $this->hasMany(Pasajero::class);
+    }
+
 }

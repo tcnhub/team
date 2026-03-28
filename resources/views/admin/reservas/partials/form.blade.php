@@ -129,8 +129,9 @@
         <!-- ── Fechas ── -->
         <div class="col-md-3">
             <label class="form-label">Fecha de Inicio <span class="text-danger">*</span></label>
-            <input type="date" name="fecha_inicio" id="inputFechaInicio"
-                   class="form-control @error('fecha_inicio') is-invalid @enderror"
+            <input type="text" name="fecha_inicio" id="inputFechaInicio"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_inicio') is-invalid @enderror"
                    value="{{ isset($reserva) ? $reserva->fecha_inicio->format('Y-m-d') : old('fecha_inicio') }}" required>
             @error('fecha_inicio')
             <div class="invalid-feedback">{{ $message }}</div>
@@ -142,8 +143,9 @@
                 Fecha de Fin
                 <span id="fechaFinHint" class="text-muted small d-none">(calculada por duración del tour)</span>
             </label>
-            <input type="date" name="fecha_fin" id="inputFechaFin"
-                   class="form-control @error('fecha_fin') is-invalid @enderror"
+            <input type="text" name="fecha_fin" id="inputFechaFin"
+                   data-date-format="Y-m-d"
+                   class="form-control flatpickr-date @error('fecha_fin') is-invalid @enderror"
                    value="{{ isset($reserva) && $reserva->fecha_fin ? $reserva->fecha_fin->format('Y-m-d') : old('fecha_fin') }}">
             @error('fecha_fin')
             <div class="invalid-feedback">{{ $message }}</div>

@@ -68,11 +68,11 @@
                                     </div>
                                     <div class="row g-2 mt-1">
                                         <div class="col-md-2">
-                                            <input type="date" name="fecha_desde" class="form-control form-control-sm"
+                                            <input type="text" name="fecha_desde" class="form-control form-control-sm flatpickr-date" data-date-format="Y-m-d"
                                                    value="{{ request('fecha_desde') }}">
                                         </div>
                                         <div class="col-md-2">
-                                            <input type="date" name="fecha_hasta" class="form-control form-control-sm"
+                                            <input type="text" name="fecha_hasta" class="form-control form-control-sm flatpickr-date" data-date-format="Y-m-d"
                                                    value="{{ request('fecha_hasta') }}">
                                         </div>
                                         <div class="col-md-2">
