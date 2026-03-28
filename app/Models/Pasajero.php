@@ -12,6 +12,7 @@ class Pasajero extends Model
         'cliente_id',
         'reserva_id',
         'tour_id',
+        'tipo_pasajero',
         'nombre',
         'apellido',
         'nombre_completo',

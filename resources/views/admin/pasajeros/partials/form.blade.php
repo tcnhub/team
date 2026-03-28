@@ -51,6 +51,15 @@
             @enderror
         </div>
 
+        <div class="col-md-3">
+            <label class="form-label">Tipo de Pasajero</label>
+            <select name="tipo_pasajero" class="form-select @error('tipo_pasajero') is-invalid @enderror">
+                <option value="adulto" {{ old('tipo_pasajero', $pasajero->tipo_pasajero ?? 'adulto') === 'adulto' ? 'selected' : '' }}>Adulto</option>
+                <option value="estudiante" {{ old('tipo_pasajero', $pasajero->tipo_pasajero ?? '') === 'estudiante' ? 'selected' : '' }}>Estudiante</option>
+                <option value="nino" {{ old('tipo_pasajero', $pasajero->tipo_pasajero ?? '') === 'nino' ? 'selected' : '' }}>Niño</option>
+            </select>
+        </div>
+
         <div class="col-md-6">
             <label class="form-label">Nombre <span class="text-danger">*</span></label>
             <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror"

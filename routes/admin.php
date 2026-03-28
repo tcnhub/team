@@ -63,6 +63,10 @@ Route::prefix('admin')
 
             // ── Reservas ───────────────────────────────────────────────────
             Route::resource('reservas', ReservaController::class);
+            Route::post('reservas/{reserva}/pasajeros-ajax', [ReservaController::class, 'storePasajeroAjax'])
+                ->name('reservas.pasajeros.store-ajax');
+            Route::post('reservas/{reserva}/pasajeros-bulk-ajax', [ReservaController::class, 'storePasajerosBulkAjax'])
+                ->name('reservas.pasajeros.bulk-store-ajax');
             Route::get('tours/{tour}/availabilities-json', [ReservaController::class, 'availabilitiesPorTour'])
                 ->name('tours.availabilities.json');
 

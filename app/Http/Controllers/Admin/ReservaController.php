@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Pago;
+use App\Models\Pasajero;
 use App\Models\Reserva;
 use App\Models\Cliente;
 use App\Models\Agente;
@@ -181,6 +182,117 @@ class ReservaController extends Controller
         }
 
         return view('admin.reservas.show', compact('reserva'));
+    }
+
+    public function storePasajeroAjax(Request $request, Reserva $reserva)
+    {
+        if (! $reserva->tour_id) {
+            return response()->json(['ok' => false, 'message' => 'La reserva no tiene un tour asociado.'], 422);
+        }
+
+        $validated = $this->validatePasajeroReserva($request);
+
+        $pasajero = DB::transaction(function () use ($validated, $reserva) {
+            $pasajero = Pasajero::create([
+                'cliente_id' => $reserva->id_cliente,
+                'reserva_id' => $reserva->id,
+                'tour_id' => $reserva->tour_id,
+                'tipo_pasajero' => $validated['tipo_pasajero'],
+                'nombre' => $validated['nombre'],
+                'apellido' => $validated['apellido'],
+                'nombre_completo' => trim($validated['nombre'] . ' ' . $validated['apellido']),
+                'tipo_documento' => $validated['tipo_documento'],
+                'numero_documento' => $validated['numero_documento'],
+                'email' => $validated['email'] ?? null,
+                'telefono' => $validated['telefono'] ?? null,
+                'whatsapp' => $validated['whatsapp'] ?? null,
+                'fecha_nacimiento' => $validated['fecha_nacimiento'] ?? null,
+                'genero' => $validated['genero'] ?? null,
+                'activo' => true,
+            ]);
+
+            $this->actualizarResumenPasajeros($reserva, [$validated['tipo_pasajero']]);
+
+            return $pasajero->load('tour');
+        });
+
+        return response()->json([
+            'ok' => true,
+            'pasajero' => [
+                'id' => $pasajero->id,
+                'nombre_completo' => $pasajero->nombre_completo,
+                'numero_documento' => $pasajero->numero_documento,
+                'tipo_pasajero' => $pasajero->tipo_pasajero,
+                'tour_nombre' => $pasajero->tour?->nombre_tour,
+                'show_url' => route('admin.pasajeros.show', $pasajero),
+            ],
+            'resumen' => $reserva->fresh(['pasajeros'])->only(['num_pasajeros', 'num_adultos', 'num_ninos']),
+        ]);
+    }
+
+    public function storePasajerosBulkAjax(Request $request, Reserva $reserva)
+    {
+        if (! $reserva->tour_id) {
+            return response()->json(['ok' => false, 'message' => 'La reserva no tiene un tour asociado.'], 422);
+        }
+
+        $validated = $request->validate([
+            'pasajeros' => ['required', 'array', 'min:1'],
+            'pasajeros.*.tipo_pasajero' => ['required', Rule::in(['adulto', 'estudiante', 'nino'])],
+            'pasajeros.*.nombre' => ['required', 'string', 'max:255'],
+            'pasajeros.*.apellido' => ['required', 'string', 'max:255'],
+            'pasajeros.*.tipo_documento' => ['required', Rule::in(['passport', 'dni', 'id'])],
+            'pasajeros.*.numero_documento' => ['required', 'string', 'max:255', 'distinct', 'unique:pasajeros,numero_documento'],
+            'pasajeros.*.email' => ['nullable', 'email'],
+            'pasajeros.*.telefono' => ['nullable', 'string', 'max:20'],
+            'pasajeros.*.whatsapp' => ['nullable', 'string', 'max:20'],
+            'pasajeros.*.fecha_nacimiento' => ['nullable', 'date'],
+            'pasajeros.*.genero' => ['nullable', Rule::in(['male', 'female', 'other'])],
+        ]);
+
+        $creados = DB::transaction(function () use ($validated, $reserva) {
+            $creados = [];
+            $tipos = [];
+
+            foreach ($validated['pasajeros'] as $item) {
+                $tipos[] = $item['tipo_pasajero'];
+
+                $creados[] = Pasajero::create([
+                    'cliente_id' => $reserva->id_cliente,
+                    'reserva_id' => $reserva->id,
+                    'tour_id' => $reserva->tour_id,
+                    'tipo_pasajero' => $item['tipo_pasajero'],
+                    'nombre' => $item['nombre'],
+                    'apellido' => $item['apellido'],
+                    'nombre_completo' => trim($item['nombre'] . ' ' . $item['apellido']),
+                    'tipo_documento' => $item['tipo_documento'],
+                    'numero_documento' => $item['numero_documento'],
+                    'email' => $item['email'] ?? null,
+                    'telefono' => $item['telefono'] ?? null,
+                    'whatsapp' => $item['whatsapp'] ?? null,
+                    'fecha_nacimiento' => $item['fecha_nacimiento'] ?? null,
+                    'genero' => $item['genero'] ?? null,
+                    'activo' => true,
+                ]);
+            }
+
+            $this->actualizarResumenPasajeros($reserva, $tipos);
+
+            return collect($creados);
+        });
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Pasajeros agregados correctamente.',
+            'pasajeros' => $creados->map(fn ($pasajero) => [
+                'id' => $pasajero->id,
+                'nombre_completo' => $pasajero->nombre_completo,
+                'numero_documento' => $pasajero->numero_documento,
+                'tipo_pasajero' => $pasajero->tipo_pasajero,
+                'show_url' => route('admin.pasajeros.show', $pasajero),
+            ]),
+            'resumen' => $reserva->fresh(['pasajeros'])->only(['num_pasajeros', 'num_adultos', 'num_ninos']),
+        ]);
     }
 
     /**
@@ -401,5 +513,28 @@ class ReservaController extends Controller
         $numero = $ultimo ? (int) substr($ultimo->codigo_reserva, -4) + 1 : 1;
 
         return sprintf("%s-%s-%04d", $prefijo, $fecha, $numero);
+    }
+
+    private function validatePasajeroReserva(Request $request): array
+    {
+        return $request->validate([
+            'tipo_pasajero' => ['required', Rule::in(['adulto', 'estudiante', 'nino'])],
+            'nombre' => ['required', 'string', 'max:255'],
+            'apellido' => ['required', 'string', 'max:255'],
+            'tipo_documento' => ['required', Rule::in(['passport', 'dni', 'id'])],
+            'numero_documento' => ['required', 'string', 'max:255', 'unique:pasajeros,numero_documento'],
+            'email' => ['nullable', 'email'],
+            'telefono' => ['nullable', 'string', 'max:20'],
+            'whatsapp' => ['nullable', 'string', 'max:20'],
+            'fecha_nacimiento' => ['nullable', 'date'],
+            'genero' => ['nullable', Rule::in(['male', 'female', 'other'])],
+        ]);
+    }
+
+    private function actualizarResumenPasajeros(Reserva $reserva, array $tipos): void
+    {
+        $reserva->increment('num_pasajeros', count($tipos));
+        $reserva->increment('num_adultos', collect($tipos)->filter(fn ($tipo) => in_array($tipo, ['adulto', 'estudiante'], true))->count());
+        $reserva->increment('num_ninos', collect($tipos)->filter(fn ($tipo) => $tipo === 'nino')->count());
     }
 }

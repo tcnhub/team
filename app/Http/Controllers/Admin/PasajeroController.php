@@ -71,6 +71,7 @@ class PasajeroController extends Controller
     {
         $validated = $this->validatePasajero($request);
         $validated['activo'] = $request->boolean('activo');
+        $validated['tipo_pasajero'] = $validated['tipo_pasajero'] ?? 'adulto';
         $validated['nombre_completo'] = trim($validated['nombre'] . ' ' . $validated['apellido']);
 
         $pasajero = Pasajero::create($validated);
@@ -117,6 +118,7 @@ class PasajeroController extends Controller
     {
         $validated = $this->validatePasajero($request, $pasajero->id);
         $validated['activo'] = $request->boolean('activo');
+        $validated['tipo_pasajero'] = $validated['tipo_pasajero'] ?? 'adulto';
         $validated['nombre_completo'] = trim($validated['nombre'] . ' ' . $validated['apellido']);
 
         $pasajero->update($validated);
@@ -153,6 +155,7 @@ class PasajeroController extends Controller
             'cliente_id' => ['required', 'exists:clientes,id'],
             'reserva_id' => ['required', 'exists:reservas,id'],
             'tour_id' => ['required', 'exists:tours,id'],
+            'tipo_pasajero' => ['nullable', Rule::in(['adulto', 'estudiante', 'nino'])],
             'nombre' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
             'tipo_documento' => ['required', Rule::in(['passport', 'dni', 'id'])],

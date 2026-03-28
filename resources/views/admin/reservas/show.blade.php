@@ -105,6 +105,89 @@
                             </div>
                         </div>
 
+                        @php
+                            $pasajerosAdultos = $reserva->pasajeros->where('tipo_pasajero', 'adulto')->count();
+                            $pasajerosEstudiantes = $reserva->pasajeros->where('tipo_pasajero', 'estudiante')->count();
+                            $pasajerosNinos = $reserva->pasajeros->where('tipo_pasajero', 'nino')->count();
+                        @endphp
+                        <div class="card mt-3">
+                            <div class="card-header d-flex align-items-center justify-content-between">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-user-add-line me-2 text-primary"></i>Gestión de Pasajeros
+                                </h5>
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalAgregarPasajero">
+                                    <i class="ri-add-line me-1"></i>Agregar pasajero
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                @if(!$reserva->tour_id)
+                                    <div class="alert alert-warning mb-0">
+                                        Esta reserva no tiene tour asociado. No se pueden registrar pasajeros hasta vincular un tour.
+                                    </div>
+                                @else
+                                    <div id="pasajerosReservaAlert" class="alert d-none"></div>
+
+                                    <div class="d-flex flex-wrap gap-2 mb-3">
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
+                                            Registrados: <span id="reservaPasajerosRegistrados">{{ $reserva->pasajeros->count() }}</span>
+                                        </span>
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                            Adultos: <span id="reservaPasajerosAdultos">{{ $pasajerosAdultos }}</span>
+                                        </span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2">
+                                            Estudiantes: <span id="reservaPasajerosEstudiantes">{{ $pasajerosEstudiantes }}</span>
+                                        </span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2">
+                                            Niños: <span id="reservaPasajerosNinos">{{ $pasajerosNinos }}</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="row g-3 align-items-end">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Cantidad de adultos</label>
+                                            <select id="cantidadAdultos" class="form-select">
+                                                @for($i = 0; $i <= 10; $i++)
+                                                    <option value="{{ $i }}">{{ $i }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Cantidad de estudiantes</label>
+                                            <select id="cantidadEstudiantes" class="form-select">
+                                                @for($i = 0; $i <= 10; $i++)
+                                                    <option value="{{ $i }}">{{ $i }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Cantidad de niños</label>
+                                            <select id="cantidadNinos" class="form-select">
+                                                @for($i = 0; $i <= 10; $i++)
+                                                    <option value="{{ $i }}">{{ $i }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 d-grid">
+                                            <button type="button" class="btn btn-outline-primary" id="btnGenerarPasajeros">
+                                                <i class="ri-layout-grid-line me-1"></i>Generar formularios
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div id="bulkPasajerosBox" class="mt-4 d-none">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <h6 class="mb-0">Pasajeros adicionales</h6>
+                                            <button type="button" class="btn btn-success btn-sm" id="btnGuardarPasajerosBulk">
+                                                <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerPasajerosBulk"></span>
+                                                <i class="ri-save-line me-1"></i>Guardar todos
+                                            </button>
+                                        </div>
+                                        <div id="bulkPasajerosContainer" class="row g-3"></div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
                         {{-- Card: Tour asociado --}}
                         @if($reserva->tour)
                             <div class="card mt-3">
@@ -178,18 +261,14 @@
                                         <p class="text-muted mb-1 small">Pasajeros</p>
                                         <div class="d-flex flex-wrap gap-2">
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
-                                                <i class="ri-group-line me-1"></i>Total: {{ $reserva->num_pasajeros }}
+                                                <i class="ri-group-line me-1"></i>Total: <span id="reservaResumenTotal">{{ $reserva->num_pasajeros }}</span>
                                             </span>
-                                            @if($reserva->num_adultos)
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-2">
-                                                    Adultos: {{ $reserva->num_adultos }}
-                                                </span>
-                                            @endif
-                                            @if($reserva->num_ninos)
-                                                <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-2">
-                                                    Niños: {{ $reserva->num_ninos }}
-                                                </span>
-                                            @endif
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-2">
+                                                Adultos: <span id="reservaResumenAdultos">{{ $reserva->num_adultos }}</span>
+                                            </span>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-2">
+                                                Niños: <span id="reservaResumenNinos">{{ $reserva->num_ninos }}</span>
+                                            </span>
                                             @if($reserva->num_bebes)
                                                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-2">
                                                     Bebés: {{ $reserva->num_bebes }}
@@ -267,15 +346,18 @@
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
                                     <i class="ri-group-line me-2 text-info"></i>Pasajeros
-                                    <span class="badge bg-secondary ms-1">{{ $reserva->pasajeros->count() }}</span>
+                                    <span class="badge bg-secondary ms-1" id="pasajerosListaBadge">{{ $reserva->pasajeros->count() }}</span>
                                 </h5>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body" id="listaPasajerosReserva">
                                 @forelse($reserva->pasajeros as $pasajero)
                                     <div class="d-flex justify-content-between border-bottom py-2">
                                         <div>
                                             <a href="{{ route('admin.pasajeros.show', $pasajero) }}" class="fw-semibold">{{ $pasajero->nombre_completo }}</a>
-                                            <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
+                                            <div class="text-muted small">
+                                                {{ $pasajero->numero_documento }}
+                                                <span class="badge bg-light text-dark border ms-1">{{ ucfirst($pasajero->tipo_pasajero ?? 'adulto') }}</span>
+                                            </div>
                                         </div>
                                         <a href="{{ route('admin.tours.show', $pasajero->tour) }}" class="small">{{ $pasajero->tour?->nombre_tour ?? 'Sin tour' }}</a>
                                     </div>
@@ -459,6 +541,378 @@
 
 @include('layouts.customizer')
 @include('layouts.vendor-scripts')
+
+@if($reserva->tour_id)
+<div class="modal fade" id="modalAgregarPasajero" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="ri-user-add-line me-1"></i>Agregar pasajero a la reserva</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalPasajeroAlert" class="alert d-none"></div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <select id="modal_tipo_pasajero" class="form-select">
+                            <option value="adulto">Adulto</option>
+                            <option value="estudiante">Estudiante</option>
+                            <option value="nino">Niño</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="modal_nombre" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Apellido</label>
+                        <input type="text" id="modal_apellido" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo documento</label>
+                        <select id="modal_tipo_documento" class="form-select">
+                            <option value="passport">Passport</option>
+                            <option value="dni">DNI</option>
+                            <option value="id">ID</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Número documento</label>
+                        <input type="text" id="modal_numero_documento" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Género</label>
+                        <select id="modal_genero" class="form-select">
+                            <option value="">Seleccionar...</option>
+                            <option value="male">Masculino</option>
+                            <option value="female">Femenino</option>
+                            <option value="other">Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Fecha nacimiento</label>
+                        <input type="text" id="modal_fecha_nacimiento" class="form-control flatpickr-date" data-date-format="Y-m-d">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Email</label>
+                        <input type="email" id="modal_email" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Teléfono</label>
+                        <input type="text" id="modal_telefono" class="form-control">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnGuardarPasajeroModal">
+                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerPasajeroModal"></span>
+                    <i class="ri-save-line me-1"></i>Guardar pasajero
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const reservaId = {{ $reserva->id }};
+    const pasajeroStoreUrl = '{{ route('admin.reservas.pasajeros.store-ajax', $reserva) }}';
+    const pasajerosBulkUrl = '{{ route('admin.reservas.pasajeros.bulk-store-ajax', $reserva) }}';
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
+
+    const alertBox = document.getElementById('pasajerosReservaAlert');
+    const bulkBox = document.getElementById('bulkPasajerosBox');
+    const bulkContainer = document.getElementById('bulkPasajerosContainer');
+    function mostrarAlerta(message, type = 'success', target = alertBox) {
+        if (!target) return;
+        target.className = `alert alert-${type}`;
+        target.textContent = message;
+        target.classList.remove('d-none');
+        setTimeout(() => target.classList.add('d-none'), 4000);
+    }
+
+    function actualizarContadores(pasajeros) {
+        document.getElementById('pasajerosListaBadge').textContent =
+            parseInt(document.getElementById('pasajerosListaBadge').textContent || '0', 10) + pasajeros.length;
+        document.getElementById('reservaPasajerosRegistrados').textContent =
+            parseInt(document.getElementById('reservaPasajerosRegistrados').textContent || '0', 10) + pasajeros.length;
+        document.getElementById('reservaResumenTotal').textContent =
+            parseInt(document.getElementById('reservaResumenTotal').textContent || '0', 10) + pasajeros.length;
+
+        pasajeros.forEach(function (pasajero) {
+            if (pasajero.tipo_pasajero === 'adulto') {
+                document.getElementById('reservaPasajerosAdultos').textContent =
+                    parseInt(document.getElementById('reservaPasajerosAdultos').textContent || '0', 10) + 1;
+                const resumenAdultos = document.getElementById('reservaResumenAdultos');
+                if (resumenAdultos) {
+                    resumenAdultos.textContent = parseInt(resumenAdultos.textContent || '0', 10) + 1;
+                }
+            } else if (pasajero.tipo_pasajero === 'estudiante') {
+                document.getElementById('reservaPasajerosEstudiantes').textContent =
+                    parseInt(document.getElementById('reservaPasajerosEstudiantes').textContent || '0', 10) + 1;
+                const resumenAdultos = document.getElementById('reservaResumenAdultos');
+                if (resumenAdultos) {
+                    resumenAdultos.textContent = parseInt(resumenAdultos.textContent || '0', 10) + 1;
+                }
+            } else if (pasajero.tipo_pasajero === 'nino') {
+                document.getElementById('reservaPasajerosNinos').textContent =
+                    parseInt(document.getElementById('reservaPasajerosNinos').textContent || '0', 10) + 1;
+                const resumenNinos = document.getElementById('reservaResumenNinos');
+                if (resumenNinos) {
+                    resumenNinos.textContent = parseInt(resumenNinos.textContent || '0', 10) + 1;
+                }
+            }
+        });
+    }
+
+    function badgeTipo(tipo) {
+        if (tipo === 'estudiante') return 'Estudiante';
+        if (tipo === 'nino') return 'Niño';
+        return 'Adulto';
+    }
+
+    function agregarPasajeroAlListado(pasajero) {
+        const cardBody = document.getElementById('listaPasajerosReserva');
+
+        if (!cardBody) return;
+
+        const empty = cardBody.querySelector('small.text-muted');
+        if (empty && empty.textContent.includes('Sin pasajeros')) {
+            empty.remove();
+        }
+
+        const row = document.createElement('div');
+        row.className = 'd-flex justify-content-between border-bottom py-2';
+        row.innerHTML = `
+            <div>
+                <a href="${pasajero.show_url}" class="fw-semibold">${pasajero.nombre_completo}</a>
+                <div class="text-muted small">
+                    ${pasajero.numero_documento}
+                    <span class="badge bg-light text-dark border ms-1">${badgeTipo(pasajero.tipo_pasajero)}</span>
+                </div>
+            </div>
+            <span class="small">${pasajero.tour_nombre ?? ''}</span>
+        `;
+        cardBody.prepend(row);
+    }
+
+    function limpiarModalPasajero() {
+        ['modal_nombre', 'modal_apellido', 'modal_numero_documento', 'modal_email', 'modal_telefono'].forEach(function (id) {
+            const input = document.getElementById(id);
+            if (input) input.value = '';
+        });
+        document.getElementById('modal_tipo_pasajero').value = 'adulto';
+        document.getElementById('modal_tipo_documento').value = 'passport';
+        document.getElementById('modal_genero').value = '';
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(document.getElementById('modal_fecha_nacimiento'), '');
+        } else {
+            document.getElementById('modal_fecha_nacimiento').value = '';
+        }
+    }
+
+    function cardPasajero(index, tipo) {
+        return `
+            <div class="col-12">
+                <div class="border rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0">Pasajero ${index + 1}</h6>
+                        <span class="badge bg-light text-dark border">${badgeTipo(tipo)}</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" data-key="nombre">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Apellido</label>
+                            <input type="text" class="form-control" data-key="apellido">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Tipo Doc.</label>
+                            <select class="form-select" data-key="tipo_documento">
+                                <option value="passport">Passport</option>
+                                <option value="dni">DNI</option>
+                                <option value="id">ID</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">N° Documento</label>
+                            <input type="text" class="form-control" data-key="numero_documento">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Género</label>
+                            <select class="form-select" data-key="genero">
+                                <option value="">-</option>
+                                <option value="male">Masculino</option>
+                                <option value="female">Femenino</option>
+                                <option value="other">Otro</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Fecha Nacimiento</label>
+                            <input type="text" class="form-control flatpickr-date" data-date-format="Y-m-d" data-key="fecha_nacimiento">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" data-key="email">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Teléfono</label>
+                            <input type="text" class="form-control" data-key="telefono">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">WhatsApp</label>
+                            <input type="text" class="form-control" data-key="whatsapp">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    document.getElementById('btnGenerarPasajeros')?.addEventListener('click', function () {
+        const cantidades = [
+            { tipo: 'adulto', cantidad: parseInt(document.getElementById('cantidadAdultos').value || '0', 10) },
+            { tipo: 'estudiante', cantidad: parseInt(document.getElementById('cantidadEstudiantes').value || '0', 10) },
+            { tipo: 'nino', cantidad: parseInt(document.getElementById('cantidadNinos').value || '0', 10) },
+        ];
+
+        let html = '';
+        let index = 0;
+
+        cantidades.forEach(function (grupo) {
+            for (let i = 0; i < grupo.cantidad; i++) {
+                html += `<div data-tipo="${grupo.tipo}">${cardPasajero(index, grupo.tipo)}</div>`;
+                index++;
+            }
+        });
+
+        bulkContainer.innerHTML = html;
+        bulkBox.classList.toggle('d-none', index === 0);
+
+        bulkContainer.querySelectorAll('.flatpickr-date').forEach(function (input) {
+            if (window.flatpickr && !input._flatpickr) {
+                window.flatpickr(input, {
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    dateFormat: 'Y-m-d',
+                    allowInput: true,
+                    locale: 'es',
+                });
+            }
+        });
+    });
+
+    document.getElementById('btnGuardarPasajeroModal')?.addEventListener('click', async function () {
+        const spinner = document.getElementById('spinnerPasajeroModal');
+        const alert = document.getElementById('modalPasajeroAlert');
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+        alert.classList.add('d-none');
+
+        const payload = {
+            tipo_pasajero: document.getElementById('modal_tipo_pasajero').value,
+            nombre: document.getElementById('modal_nombre').value.trim(),
+            apellido: document.getElementById('modal_apellido').value.trim(),
+            tipo_documento: document.getElementById('modal_tipo_documento').value,
+            numero_documento: document.getElementById('modal_numero_documento').value.trim(),
+            genero: document.getElementById('modal_genero').value || null,
+            fecha_nacimiento: document.getElementById('modal_fecha_nacimiento').value || null,
+            email: document.getElementById('modal_email').value.trim() || null,
+            telefono: document.getElementById('modal_telefono').value.trim() || null,
+        };
+
+        try {
+            const response = await fetch(pasajeroStoreUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudo guardar el pasajero.');
+            }
+
+            agregarPasajeroAlListado(data.pasajero);
+            actualizarContadores([data.pasajero]);
+            mostrarAlerta('Pasajero agregado correctamente.');
+            bootstrap.Modal.getInstance(document.getElementById('modalAgregarPasajero')).hide();
+            limpiarModalPasajero();
+        } catch (error) {
+            alert.className = 'alert alert-danger';
+            alert.textContent = error.message;
+            alert.classList.remove('d-none');
+        } finally {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
+    document.getElementById('modalAgregarPasajero')?.addEventListener('show.bs.modal', limpiarModalPasajero);
+
+    document.getElementById('btnGuardarPasajerosBulk')?.addEventListener('click', async function () {
+        const cards = bulkContainer.querySelectorAll('[data-tipo]');
+        const spinner = document.getElementById('spinnerPasajerosBulk');
+
+        if (!cards.length) {
+            mostrarAlerta('Primero genera los formularios de pasajeros.', 'warning');
+            return;
+        }
+
+        const pasajeros = Array.from(cards).map(function (wrapper) {
+            const root = wrapper;
+            const data = { tipo_pasajero: root.dataset.tipo };
+            root.querySelectorAll('[data-key]').forEach(function (input) {
+                data[input.dataset.key] = input.value || null;
+            });
+            return data;
+        });
+
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+
+        try {
+            const response = await fetch(pasajerosBulkUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                body: JSON.stringify({ pasajeros }),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudieron guardar los pasajeros.');
+            }
+
+            data.pasajeros.forEach(agregarPasajeroAlListado);
+            actualizarContadores(data.pasajeros);
+            bulkContainer.innerHTML = '';
+            bulkBox.classList.add('d-none');
+            document.getElementById('cantidadAdultos').value = '0';
+            document.getElementById('cantidadEstudiantes').value = '0';
+            document.getElementById('cantidadNinos').value = '0';
+            mostrarAlerta(data.message || 'Pasajeros guardados correctamente.');
+        } catch (error) {
+            mostrarAlerta(error.message, 'danger');
+        } finally {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+});
+</script>
+@endif
 <script src="{{ asset('assets/js/app.js') }}"></script>
 </body>
 </html>
