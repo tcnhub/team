@@ -69,6 +69,8 @@ Route::prefix('admin')
             // ── Clientes ───────────────────────────────────────────────────
             Route::resource('clientes', ClienteController::class);
             Route::resource('pasajeros', PasajeroController::class);
+            Route::get('pasajeros/reservas/{reserva}/relacion', [PasajeroController::class, 'reservaRelacion'])
+                ->name('pasajeros.reserva-relacion');
             Route::get('clientes/buscar-documento', [ClienteController::class, 'buscarPorDocumento'])
                 ->name('clientes.buscar-documento');
             Route::post('clientes/store-quick', [ClienteController::class, 'storeQuick'])

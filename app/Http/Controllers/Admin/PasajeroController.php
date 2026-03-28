@@ -92,6 +92,27 @@ class PasajeroController extends Controller
         return view('admin.pasajeros.edit', array_merge($this->formData(), compact('pasajero')));
     }
 
+    public function reservaRelacion(Reserva $reserva)
+    {
+        $reserva->load(['cliente:id,nombre_completo,numero_documento', 'tour:id,nombre_tour']);
+
+        return response()->json([
+            'reserva' => [
+                'id' => $reserva->id,
+                'codigo_reserva' => $reserva->codigo_reserva,
+            ],
+            'cliente' => $reserva->cliente ? [
+                'id' => $reserva->cliente->id,
+                'nombre_completo' => $reserva->cliente->nombre_completo,
+                'numero_documento' => $reserva->cliente->numero_documento,
+            ] : null,
+            'tour' => $reserva->tour ? [
+                'id' => $reserva->tour->id,
+                'nombre_tour' => $reserva->tour->nombre_tour,
+            ] : null,
+        ]);
+    }
+
     public function update(Request $request, Pasajero $pasajero)
     {
         $validated = $this->validatePasajero($request, $pasajero->id);

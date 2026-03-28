@@ -5,9 +5,25 @@
     @endif
 
     <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-6">
+            <label class="form-label">Reserva <span class="text-danger">*</span></label>
+            <select name="reserva_id" id="reserva_id" class="form-select @error('reserva_id') is-invalid @enderror" required>
+                <option value="">Seleccionar reserva...</option>
+                @foreach($reservas ?? [] as $reserva)
+                    <option value="{{ $reserva->id }}" {{ old('reserva_id', $pasajero->reserva_id ?? '') == $reserva->id ? 'selected' : '' }}>
+                        {{ $reserva->codigo_reserva }} - {{ $reserva->cliente?->nombre_completo ?? 'Sin cliente' }}
+                    </option>
+                @endforeach
+            </select>
+            @error('reserva_id')
+            <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+            <div class="form-text">Al elegir la reserva se cargarán automáticamente el cliente y el tour.</div>
+        </div>
+
+        <div class="col-md-3">
             <label class="form-label">Cliente <span class="text-danger">*</span></label>
-            <select name="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
+            <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror" required>
                 <option value="">Seleccionar cliente...</option>
                 @foreach($clientes ?? [] as $cliente)
                     <option value="{{ $cliente->id }}" {{ old('cliente_id', $pasajero->cliente_id ?? '') == $cliente->id ? 'selected' : '' }}>
@@ -20,24 +36,9 @@
             @enderror
         </div>
 
-        <div class="col-md-4">
-            <label class="form-label">Reserva <span class="text-danger">*</span></label>
-            <select name="reserva_id" class="form-select @error('reserva_id') is-invalid @enderror" required>
-                <option value="">Seleccionar reserva...</option>
-                @foreach($reservas ?? [] as $reserva)
-                    <option value="{{ $reserva->id }}" {{ old('reserva_id', $pasajero->reserva_id ?? '') == $reserva->id ? 'selected' : '' }}>
-                        {{ $reserva->codigo_reserva }} - {{ $reserva->cliente?->nombre_completo ?? 'Sin cliente' }}
-                    </option>
-                @endforeach
-            </select>
-            @error('reserva_id')
-            <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-        </div>
-
-        <div class="col-md-4">
+        <div class="col-md-3">
             <label class="form-label">Tour <span class="text-danger">*</span></label>
-            <select name="tour_id" class="form-select @error('tour_id') is-invalid @enderror" required>
+            <select name="tour_id" id="tour_id" class="form-select @error('tour_id') is-invalid @enderror" required>
                 <option value="">Seleccionar tour...</option>
                 @foreach($tours ?? [] as $tour)
                     <option value="{{ $tour->id }}" {{ old('tour_id', $pasajero->tour_id ?? '') == $tour->id ? 'selected' : '' }}>
@@ -206,3 +207,53 @@
         <a href="{{ route('admin.pasajeros.index') }}" class="btn btn-secondary ms-2">Cancelar</a>
     </div>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const reservaSelect = document.getElementById('reserva_id');
+    const clienteSelect = document.getElementById('cliente_id');
+    const tourSelect = document.getElementById('tour_id');
+    const baseUrl = '{{ url('admin/pasajeros/reservas') }}';
+
+    async function sincronizarReserva(reservaId) {
+        if (!reservaId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${baseUrl}/${reservaId}/relacion`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.cliente && clienteSelect) {
+                clienteSelect.value = String(data.cliente.id);
+            }
+
+            if (data.tour && tourSelect) {
+                tourSelect.value = String(data.tour.id);
+            }
+        } catch (error) {
+            console.error('No se pudo sincronizar la reserva del pasajero.', error);
+        }
+    }
+
+    if (reservaSelect) {
+        reservaSelect.addEventListener('change', function () {
+            sincronizarReserva(this.value);
+        });
+
+        if (reservaSelect.value) {
+            sincronizarReserva(reservaSelect.value);
+        }
+    }
+});
+</script>
