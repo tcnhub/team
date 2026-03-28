@@ -105,6 +105,100 @@
                             </div>
                         </div>
 
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-layout-grid-line me-2 text-primary"></i>Resumen Detallado de la Reserva
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 h-100 bg-light-subtle">
+                                            <div class="text-muted small mb-1">Codigo</div>
+                                            <div class="fw-bold fs-5 text-primary">{{ $reserva->codigo_reserva }}</div>
+                                            <div class="small text-muted mt-2">Registro: {{ $reserva->fecha_reserva->format('d/m/Y H:i') }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 h-100">
+                                            <div class="text-muted small mb-1">Cliente relacionado</div>
+                                            @if($reserva->cliente)
+                                                <button type="button" class="btn btn-link p-0 fw-semibold text-start btn-open-related-modal" data-url="{{ route('admin.clientes.modal-ajax', $reserva->cliente) }}">
+                                                    {{ $reserva->cliente->nombre_completo }}
+                                                </button>
+                                                <div class="small text-muted">{{ $reserva->cliente->numero_documento ?: 'Sin documento' }}</div>
+                                            @else
+                                                <div class="fw-semibold">Sin cliente</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-3 h-100">
+                                            <div class="text-muted small mb-1">Agente relacionado</div>
+                                            @if($reserva->agente)
+                                                <button type="button" class="btn btn-link p-0 fw-semibold text-start btn-open-related-modal" data-url="{{ route('admin.agentes.modal-ajax', $reserva->agente) }}">
+                                                    {{ $reserva->agente->nombres . ' ' . $reserva->agente->apellidos }}
+                                                </button>
+                                                <div class="small text-muted">{{ $reserva->agente->codigo_agente ?: 'Sin codigo' }}</div>
+                                            @else
+                                                <div class="fw-semibold">Sin agente</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 h-100">
+                                            <div class="text-muted small mb-1">Tour relacionado</div>
+                                            @if($reserva->tour)
+                                                <button type="button" class="btn btn-link p-0 fw-semibold text-start btn-open-related-modal" data-url="{{ route('admin.tours.modal-ajax', $reserva->tour) }}">
+                                                    {{ $reserva->tour->nombre_tour }}
+                                                </button>
+                                                <div class="small text-muted">{{ $reserva->tour->codigo_tour }} | USD {{ number_format((float) $reserva->tour->precio_base, 2) }}</div>
+                                            @else
+                                                <div class="fw-semibold">Sin tour vinculado</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="border rounded p-3 h-100">
+                                            <div class="row g-3">
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Fuente</div>
+                                                    <div class="fw-semibold">{{ $reserva->fuente_reserva ?? 'Sin registro' }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Tipo</div>
+                                                    <div class="fw-semibold">{{ $reserva->tipo_reserva ?: 'Sin registro' }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Moneda</div>
+                                                    <div class="fw-semibold">{{ $reserva->moneda }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Tarifa por persona</div>
+                                                    <div class="fw-semibold">USD {{ number_format((float) $reserva->precio_total, 2) }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Descuento</div>
+                                                    <div class="fw-semibold">USD {{ number_format((float) ($reserva->descuento ?? 0), 2) }}</div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="text-muted small">Precio final</div>
+                                                    <div class="fw-semibold text-success">USD {{ number_format((float) ($reserva->precio_final ?? 0), 2) }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="border rounded p-3">
+                                            <div class="text-muted small mb-1">Descripcion del servicio</div>
+                                            <div class="fw-semibold">{{ $reserva->descripcion_servicio ?: 'Sin descripcion registrada' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         @php
                             $pasajerosAdultos = $reserva->pasajeros->where('tipo_pasajero', 'adulto')->count();
                             $pasajerosEstudiantes = $reserva->pasajeros->where('tipo_pasajero', 'estudiante')->count();
@@ -183,6 +277,85 @@
                                             </button>
                                         </div>
                                         <div id="bulkPasajerosContainer" class="row g-3"></div>
+                                    </div>
+
+                                    <div class="card mt-4">
+                                        <div class="card-header d-flex align-items-center justify-content-between">
+                                            <h5 class="card-title mb-0">
+                                                <i class="ri-team-line me-2 text-primary"></i>Pasajeros asignados a la reserva
+                                            </h5>
+                                            <span class="badge bg-secondary" id="tablaPasajerosBadge">{{ $reserva->pasajeros->count() }}</span>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="tablaPasajerosAlert" class="alert d-none"></div>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm align-middle mb-0">
+                                                    <thead class="table-light">
+                                                    <tr>
+                                                        <th>Tipo</th>
+                                                        <th>Pasajero</th>
+                                                        <th>Documento</th>
+                                                        <th>Contacto</th>
+                                                        <th class="text-end">Acciones</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody id="tablaPasajerosReservaBody">
+                                                    @forelse($reserva->pasajeros as $pasajero)
+                                                        @php
+                                                            $tipoLabel = match($pasajero->tipo_pasajero) {
+                                                                'estudiante' => 'Estudiante',
+                                                                'nino' => 'Nino',
+                                                                default => 'Adulto',
+                                                            };
+                                                        @endphp
+                                                        <tr data-pasajero-id="{{ $pasajero->id }}">
+                                                            <td>
+                                                                <span class="badge bg-light text-dark border">{{ $tipoLabel }}</span>
+                                                            </td>
+                                                            <td>
+                                                                <div class="fw-semibold">
+                                                                    <a href="{{ route('admin.pasajeros.show', $pasajero) }}">{{ $pasajero->nombre_completo }}</a>
+                                                                </div>
+                                                                <div class="text-muted small">
+                                                                    {{ $pasajero->genero ? ucfirst($pasajero->genero) : 'Sin genero' }}
+                                                                    @if($pasajero->fecha_nacimiento)
+                                                                        <span class="ms-1">| {{ $pasajero->fecha_nacimiento->format('d/m/Y') }}</span>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="fw-medium">{{ strtoupper($pasajero->tipo_documento ?? '-') }}</div>
+                                                                <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="small">{{ $pasajero->email ?: 'Sin email' }}</div>
+                                                                <div class="text-muted small">{{ $pasajero->telefono ?: ($pasajero->whatsapp ?: 'Sin telefono') }}</div>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-outline-warning btn-editar-pasajero"
+                                                                    data-id="{{ $pasajero->id }}">
+                                                                    <i class="ri-pencil-line"></i>
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-sm btn-outline-danger btn-eliminar-pasajero"
+                                                                    data-id="{{ $pasajero->id }}"
+                                                                    data-nombre="{{ $pasajero->nombre_completo }}">
+                                                                    <i class="ri-delete-bin-line"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    @empty
+                                                        <tr id="tablaPasajerosEmpty">
+                                                            <td colspan="5" class="text-center text-muted py-4">Sin pasajeros vinculados a esta reserva.</td>
+                                                        </tr>
+                                                    @endforelse
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </div>
                                 @endif
                             </div>
@@ -283,89 +456,50 @@
 
                         <div class="card mt-3">
                             <div class="card-header d-flex align-items-center justify-content-between">
-                                <h5 class="card-title mb-0">
-                                    <i class="ri-team-line me-2 text-primary"></i>Pasajeros asignados a la reserva
-                                </h5>
-                                <span class="badge bg-secondary" id="tablaPasajerosBadge">{{ $reserva->pasajeros->count() }}</span>
+                                <h5 class="card-title mb-0"><i class="ri-service-line me-2 text-info"></i>Gestion de Addons</h5>
+                                <button type="button" class="btn btn-sm btn-primary" id="btnGuardarAddonsReserva">
+                                    <span class="spinner-border spinner-border-sm d-none me-1" id="spinnerAddonsReserva"></span>
+                                    <i class="ri-save-line me-1"></i>Guardar addons
+                                </button>
                             </div>
                             <div class="card-body">
-                                <div id="tablaPasajerosAlert" class="alert d-none"></div>
-                                <div class="table-responsive">
-                                    <table class="table table-sm align-middle mb-0">
-                                        <thead class="table-light">
-                                        <tr>
-                                            <th>Tipo</th>
-                                            <th>Pasajero</th>
-                                            <th>Documento</th>
-                                            <th>Contacto</th>
-                                            <th class="text-end">Acciones</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody id="tablaPasajerosReservaBody">
-                                        @forelse($reserva->pasajeros as $pasajero)
+                                @if(!$reserva->tour_id)
+                                    <div class="alert alert-warning mb-0">Esta reserva no tiene tour asociado. No se pueden agregar addons.</div>
+                                @elseif($reserva->tour?->addons?->isEmpty())
+                                    <div class="alert alert-info mb-0">El tour asociado no tiene addons disponibles.</div>
+                                @else
+                                    <div id="addonsReservaAlert" class="alert d-none"></div>
+                                    <div id="addonsReservaManager" class="row g-3">
+                                        @foreach($reserva->tour->addons as $addonDisponible)
                                             @php
-                                                $tipoLabel = match($pasajero->tipo_pasajero) {
-                                                    'estudiante' => 'Estudiante',
-                                                    'nino' => 'Nino',
-                                                    default => 'Adulto',
-                                                };
+                                                $addonActual = $reserva->addons->firstWhere('id', $addonDisponible->id);
+                                                $cantidadActual = (int) ($addonActual?->pivot?->cantidad ?? 0);
                                             @endphp
-                                            <tr data-pasajero-id="{{ $pasajero->id }}">
-                                                <td>
-                                                    <span class="badge bg-light text-dark border">{{ $tipoLabel }}</span>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-semibold">
-                                                        <a href="{{ route('admin.pasajeros.show', $pasajero) }}">{{ $pasajero->nombre_completo }}</a>
+                                            <div class="col-12">
+                                                <div class="border rounded p-3">
+                                                    <div class="row g-3 align-items-center">
+                                                        <div class="col-md-8">
+                                                            <div class="fw-semibold">{{ $addonDisponible->nombre }}</div>
+                                                            <div class="small text-muted">{{ $addonDisponible->descripcion ?: 'Sin descripcion' }}</div>
+                                                            <div class="small text-primary">USD {{ number_format((float) $addonDisponible->monto, 2) }} por unidad</div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <input type="hidden" class="addon-reserva-id" value="{{ $addonDisponible->id }}" @disabled($cantidadActual === 0)>
+                                                            <label class="form-label small">Cantidad</label>
+                                                            <select class="form-select addon-reserva-cantidad" data-addon-id="{{ $addonDisponible->id }}" data-addon-nombre="{{ $addonDisponible->nombre }}" data-addon-descripcion="{{ $addonDisponible->descripcion }}" data-addon-monto="{{ number_format((float) $addonDisponible->monto, 2, '.', '') }}">
+                                                                @for($i = 0; $i <= 10; $i++)
+                                                                    <option value="{{ $i }}" @selected($i === $cantidadActual)>{{ $i }}</option>
+                                                                @endfor
+                                                            </select>
+                                                        </div>
                                                     </div>
-                                                    <div class="text-muted small">
-                                                        {{ $pasajero->genero ? ucfirst($pasajero->genero) : 'Sin genero' }}
-                                                        @if($pasajero->fecha_nacimiento)
-                                                            <span class="ms-1">| {{ $pasajero->fecha_nacimiento->format('d/m/Y') }}</span>
-                                                        @endif
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div class="fw-medium">{{ strtoupper($pasajero->tipo_documento ?? '-') }}</div>
-                                                    <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
-                                                </td>
-                                                <td>
-                                                    <div class="small">{{ $pasajero->email ?: 'Sin email' }}</div>
-                                                    <div class="text-muted small">{{ $pasajero->telefono ?: ($pasajero->whatsapp ?: 'Sin telefono') }}</div>
-                                                </td>
-                                                <td class="text-end">
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-outline-warning btn-editar-pasajero"
-                                                        data-id="{{ $pasajero->id }}">
-                                                        <i class="ri-pencil-line"></i>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-outline-danger btn-eliminar-pasajero"
-                                                        data-id="{{ $pasajero->id }}"
-                                                        data-nombre="{{ $pasajero->nombre_completo }}">
-                                                        <i class="ri-delete-bin-line"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr id="tablaPasajerosEmpty">
-                                                <td colspan="5" class="text-center text-muted py-4">Sin pasajeros vinculados a esta reserva.</td>
-                                            </tr>
-                                        @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
 
-                        @if($reserva->addons->isNotEmpty())
-                            <div class="card mt-3">
-                                <div class="card-header">
-                                    <h5 class="card-title mb-0"><i class="ri-service-line me-2 text-info"></i>Addons contratados</h5>
-                                </div>
-                                <div class="card-body p-0">
+                                    <hr class="my-4">
+                                    <h6 class="mb-3"><i class="ri-service-line me-1 text-info"></i>Addons contratados</h6>
                                     <div class="table-responsive">
                                         <table class="table table-sm mb-0">
                                             <thead class="table-light">
@@ -376,9 +510,9 @@
                                                 <th class="text-end pe-3">Total</th>
                                             </tr>
                                             </thead>
-                                            <tbody>
-                                            @foreach($reserva->addons as $addon)
-                                                <tr>
+                                            <tbody id="tablaAddonsReservaBody">
+                                            @forelse($reserva->addons as $addon)
+                                                <tr data-addon-id="{{ $addon->id }}">
                                                     <td class="ps-3">
                                                         <div class="fw-semibold">{{ $addon->nombre }}</div>
                                                         <small class="text-muted">{{ $addon->descripcion ?: 'Sin descripción' }}</small>
@@ -387,13 +521,23 @@
                                                     <td>USD {{ number_format($addon->pivot->monto_unitario, 2) }}</td>
                                                     <td class="text-end pe-3">USD {{ number_format($addon->pivot->monto_total, 2) }}</td>
                                                 </tr>
-                                            @endforeach
+                                            @empty
+                                                <tr id="tablaAddonsEmpty">
+                                                    <td colspan="4" class="text-center text-muted py-4">Sin addons vinculados a esta reserva.</td>
+                                                </tr>
+                                            @endforelse
                                             </tbody>
+                                            <tfoot>
+                                            <tr class="table-light">
+                                                <th colspan="3" class="text-end ps-3">Total addons</th>
+                                                <th class="text-end pe-3" id="tablaAddonsReservaTotal">USD {{ number_format((float) $reserva->addons->sum(fn ($addon) => $addon->pivot->monto_total), 2) }}</th>
+                                            </tr>
+                                            </tfoot>
                                         </table>
                                     </div>
-                                </div>
+                                @endif
                             </div>
-                        @endif
+                        </div>
 
                         {{-- Card: Notas --}}
                         @if($reserva->notas || $reserva->requisitos_especiales)
@@ -541,47 +685,62 @@
                                     <tbody>
                                         <tr>
                                             <td class="text-muted ps-3">Moneda</td>
-                                            <td class="fw-semibold text-end pe-3">{{ $reserva->moneda }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenMoneda">{{ $reserva->moneda }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted ps-3">Tarifa por persona</td>
-                                            <td class="fw-semibold text-end pe-3">{{ number_format($tarifaPorPersona, 2) }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenTarifa">{{ number_format($tarifaPorPersona, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted ps-3">Cantidad de personas</td>
-                                            <td class="fw-semibold text-end pe-3">{{ $cantidadPersonasFinanciera }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenPersonas">{{ $cantidadPersonasFinanciera }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted ps-3">Subtotal de la reserva</td>
-                                            <td class="fw-semibold text-end pe-3">{{ number_format($subtotalReserva, 2) }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenSubtotal">{{ number_format($subtotalReserva, 2) }}</td>
                                         </tr>
-                                        @if($addonsReservaTotal > 0)
                                             <tr>
                                                 <td class="text-muted ps-3">Addons</td>
-                                                <td class="fw-semibold text-end pe-3">{{ number_format($addonsReservaTotal, 2) }}</td>
+                                                <td class="fw-semibold text-end pe-3" id="finResumenAddonsTotal">{{ number_format($addonsReservaTotal, 2) }}</td>
                                             </tr>
-                                        @endif
+                                            <tr id="finResumenAddonsEmpty" @class(['d-none' => $reserva->addons->isNotEmpty()])>
+                                                <td class="ps-4 small text-muted">No hay addons seleccionados</td>
+                                                <td class="small fw-semibold text-end pe-3">0.00</td>
+                                            </tr>
+                                            @foreach($reserva->addons as $addon)
+                                                <tr class="fin-addon-row" data-addon-id="{{ $addon->id }}">
+                                                    <td class="ps-4 small text-muted">
+                                                        {{ $addon->nombre }}
+                                                        <div class="small">
+                                                            {{ $addon->pivot->cantidad }} x {{ number_format((float) $addon->pivot->monto_unitario, 2) }}
+                                                        </div>
+                                                    </td>
+                                                    <td class="small fw-semibold text-end pe-3">
+                                                        {{ number_format((float) $addon->pivot->monto_total, 2) }}
+                                                    </td>
+                                                </tr>
+                                            @endforeach
                                         @if($reserva->descuento > 0)
                                             <tr>
                                                 <td class="text-muted ps-3">Descuento</td>
-                                                <td class="fw-semibold text-danger text-end pe-3">- {{ number_format($descuentoReserva, 2) }}</td>
+                                                <td class="fw-semibold text-danger text-end pe-3" id="finResumenDescuento">- {{ number_format($descuentoReserva, 2) }}</td>
                                             </tr>
                                         @endif
                                         <tr class="table-light">
                                             <td class="fw-bold ps-3">Total a pagar</td>
-                                            <td class="fw-bold text-success text-end pe-3 fs-6">{{ number_format($totalReserva, 2) }}</td>
+                                            <td class="fw-bold text-success text-end pe-3 fs-6" id="finResumenTotal">{{ number_format($totalReserva, 2) }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted ps-3">Pagos realizados</td>
-                                            <td class="fw-semibold text-end pe-3">{{ $cantidadPagosRealizados }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenPagosCount">{{ $cantidadPagosRealizados }}</td>
                                         </tr>
                                         <tr>
                                             <td class="text-muted ps-3">Monto total pagado</td>
-                                            <td class="fw-semibold text-end pe-3">{{ number_format($montoTotalPagado, 2) }}</td>
+                                            <td class="fw-semibold text-end pe-3" id="finResumenPagado">{{ number_format($montoTotalPagado, 2) }}</td>
                                         </tr>
                                         <tr class="{{ $saldoPorPagar > 0 ? 'table-warning' : 'table-success' }}">
                                             <td class="fw-bold ps-3">Saldo por pagar</td>
-                                            <td class="fw-bold text-end pe-3">{{ number_format($saldoPorPagar, 2) }}</td>
+                                            <td class="fw-bold text-end pe-3" id="finResumenSaldo">{{ number_format($saldoPorPagar, 2) }}</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -590,10 +749,10 @@
                                 <div class="card-footer py-2">
                                     <div class="d-flex justify-content-between mb-1">
                                         <small class="text-muted">Progreso de pago</small>
-                                        <small class="fw-semibold">{{ $pctPago }}%</small>
+                                        <small class="fw-semibold" id="finResumenPctLabel">{{ $pctPago }}%</small>
                                     </div>
                                     <div class="progress" style="height: 8px;">
-                                        <div class="progress-bar {{ $pctPago >= 100 ? 'bg-success' : ($pctPago >= 50 ? 'bg-info' : 'bg-warning') }}"
+                                        <div class="progress-bar {{ $pctPago >= 100 ? 'bg-success' : ($pctPago >= 50 ? 'bg-info' : 'bg-warning') }}" id="finResumenPctBar"
                                              style="width: {{ $pctPago }}%"></div>
                                     </div>
                                 </div>
@@ -864,6 +1023,39 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalRelacionReserva" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalRelacionReservaTitle">Detalle relacionado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalRelacionReservaAlert" class="alert d-none"></div>
+                <div class="text-muted small mb-3" id="modalRelacionReservaSubtitle"></div>
+                <div id="modalRelacionReservaBody" class="row g-3"></div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-outline-primary d-none" id="modalRelacionReservaLink" target="_blank">Abrir ficha completa</a>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@php
+    $addonsReservaJs = $reserva->addons->map(function ($addon) {
+        return [
+            'id' => $addon->id,
+            'nombre' => $addon->nombre,
+            'descripcion' => $addon->descripcion,
+            'cantidad' => (int) $addon->pivot->cantidad,
+            'monto_unitario' => (float) $addon->pivot->monto_unitario,
+            'monto_total' => (float) $addon->pivot->monto_total,
+        ];
+    })->values()->all();
+@endphp
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const reservaId = {{ $reserva->id }};
@@ -872,7 +1064,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const pasajeroEditUrlTemplate = '{{ route('admin.reservas.pasajeros.edit-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
     const pasajeroUpdateUrlTemplate = '{{ route('admin.reservas.pasajeros.update-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
     const pasajeroDestroyUrlTemplate = '{{ route('admin.reservas.pasajeros.destroy-ajax', ['reserva' => $reserva, 'pasajero' => '__PASAJERO__']) }}';
+    const addonsSyncUrl = '{{ route('admin.reservas.addons.sync-ajax', $reserva) }}';
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
+    const modalRelacionReserva = document.getElementById('modalRelacionReserva');
 
     const alertBox = document.getElementById('pasajerosReservaAlert');
     const bulkBox = document.getElementById('bulkPasajerosBox');
@@ -880,9 +1074,38 @@ document.addEventListener('DOMContentLoaded', function () {
     const tableAlert = document.getElementById('tablaPasajerosAlert');
     const tableBody = document.getElementById('tablaPasajerosReservaBody');
     const sideList = document.getElementById('listaPasajerosReserva');
+    const addonsAlert = document.getElementById('addonsReservaAlert');
+    const addonsTableBody = document.getElementById('tablaAddonsReservaBody');
 
     function buildUrl(template, pasajeroId) {
         return template.replace('__PASAJERO__', pasajeroId);
+    }
+
+    function renderRelacionModal(data) {
+        document.getElementById('modalRelacionReservaTitle').textContent = data.title || 'Detalle relacionado';
+        document.getElementById('modalRelacionReservaSubtitle').textContent = data.subtitle || '';
+        document.getElementById('modalRelacionReservaBody').innerHTML = (data.fields || []).map(function (field) {
+            return `
+                <div class="col-md-6">
+                    <div class="border rounded p-3 h-100">
+                        <div class="text-muted small mb-1">${field.label}</div>
+                        <div class="fw-semibold">${field.value || 'Sin registro'}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        const link = document.getElementById('modalRelacionReservaLink');
+        if (data.show_url) {
+            link.href = data.show_url;
+            link.classList.remove('d-none');
+        } else {
+            link.classList.add('d-none');
+        }
+    }
+
+    function formatMoney(value) {
+        return Number(value || 0).toFixed(2);
     }
 
     function mostrarAlerta(message, type = 'success', target = alertBox) {
@@ -891,6 +1114,117 @@ document.addEventListener('DOMContentLoaded', function () {
         target.textContent = message;
         target.classList.remove('d-none');
         setTimeout(() => target.classList.add('d-none'), 4000);
+    }
+
+    function addonPayloadDesdeSelects() {
+        return Array.from(document.querySelectorAll('.addon-reserva-cantidad'))
+            .map(function (select) {
+                return {
+                    addon_id: select.dataset.addonId,
+                    cantidad: parseInt(select.value || '0', 10),
+                    nombre: select.dataset.addonNombre || 'Addon',
+                    descripcion: select.dataset.addonDescripcion || '',
+                    monto_unitario: parseFloat(select.dataset.addonMonto || '0'),
+                };
+            })
+            .filter(function (item) {
+                return item.cantidad > 0;
+            })
+            .map(function (item) {
+                item.monto_total = item.monto_unitario * item.cantidad;
+                return item;
+            });
+    }
+
+    function renderAddonTable(addons) {
+        if (!addonsTableBody) return;
+        const totalEl = document.getElementById('tablaAddonsReservaTotal');
+        const addonsTotal = addons.reduce((acc, addon) => acc + Number(addon.monto_total || 0), 0);
+
+        if (!addons.length) {
+            addonsTableBody.innerHTML = '<tr id="tablaAddonsEmpty"><td colspan="4" class="text-center text-muted py-4">Sin addons vinculados a esta reserva.</td></tr>';
+            if (totalEl) totalEl.textContent = `USD ${formatMoney(0)}`;
+            return;
+        }
+
+        addonsTableBody.innerHTML = addons.map(function (addon) {
+            return `
+                <tr data-addon-id="${addon.id}">
+                    <td class="ps-3">
+                        <div class="fw-semibold">${addon.nombre}</div>
+                        <small class="text-muted">${addon.descripcion || 'Sin descripcion'}</small>
+                    </td>
+                    <td>${addon.cantidad}</td>
+                    <td>USD ${formatMoney(addon.monto_unitario)}</td>
+                    <td class="text-end pe-3">USD ${formatMoney(addon.monto_total)}</td>
+                </tr>
+            `;
+        }).join('');
+        if (totalEl) totalEl.textContent = `USD ${formatMoney(addonsTotal)}`;
+    }
+
+    function renderResumenAddonRows(addons) {
+        document.querySelectorAll('.fin-addon-row').forEach(function (row) {
+            row.remove();
+        });
+
+        const emptyRow = document.getElementById('finResumenAddonsEmpty');
+        const totalRow = document.getElementById('finResumenAddonsTotal')?.closest('tr');
+
+        if (!totalRow || !emptyRow) return;
+
+        if (!addons.length) {
+            emptyRow.classList.remove('d-none');
+            return;
+        }
+
+        emptyRow.classList.add('d-none');
+        addons.forEach(function (addon) {
+            totalRow.insertAdjacentHTML('afterend', `
+                <tr class="fin-addon-row" data-addon-id="${addon.id}">
+                    <td class="ps-4 small text-muted">
+                        ${addon.nombre}
+                        <div class="small">${addon.cantidad} x ${formatMoney(addon.monto_unitario)}</div>
+                    </td>
+                    <td class="small fw-semibold text-end pe-3">${formatMoney(addon.monto_total)}</td>
+                </tr>
+            `);
+        });
+    }
+
+    function updateFinancialSummary(resumen) {
+        if (!resumen) return;
+
+        const setText = function (id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        };
+
+        setText('finResumenMoneda', resumen.moneda ?? 'USD');
+        setText('finResumenTarifa', formatMoney(resumen.tarifa_por_persona));
+        setText('finResumenPersonas', resumen.cantidad_personas ?? 0);
+        setText('finResumenSubtotal', formatMoney(resumen.subtotal_reserva));
+        setText('finResumenAddonsTotal', formatMoney(resumen.addons_total));
+        setText('finResumenTotal', formatMoney(resumen.total_reserva));
+        setText('finResumenPagosCount', resumen.cantidad_pagos_realizados ?? 0);
+        setText('finResumenPagado', formatMoney(resumen.monto_total_pagado));
+        setText('finResumenSaldo', formatMoney(resumen.saldo_por_pagar));
+        setText('finResumenPctLabel', `${resumen.pct_pago ?? 0}%`);
+
+        const descuentoEl = document.getElementById('finResumenDescuento');
+        if (descuentoEl) {
+            descuentoEl.textContent = `- ${formatMoney(resumen.descuento)}`;
+        }
+
+        const pctBar = document.getElementById('finResumenPctBar');
+        if (pctBar) {
+            const pct = parseInt(resumen.pct_pago || 0, 10);
+            pctBar.style.width = `${pct}%`;
+            pctBar.classList.remove('bg-success', 'bg-info', 'bg-warning');
+            pctBar.classList.add(pct >= 100 ? 'bg-success' : (pct >= 50 ? 'bg-info' : 'bg-warning'));
+        }
+
+        renderResumenAddonRows(resumen.addons || []);
     }
 
     function actualizarContadoresDesdeResumen(resumen) {
@@ -1328,6 +1662,44 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     document.addEventListener('click', async function (event) {
+        const relatedButton = event.target.closest('.btn-open-related-modal');
+        if (!relatedButton) {
+            return;
+        }
+
+        const alert = document.getElementById('modalRelacionReservaAlert');
+        const body = document.getElementById('modalRelacionReservaBody');
+        const subtitle = document.getElementById('modalRelacionReservaSubtitle');
+        document.getElementById('modalRelacionReservaTitle').textContent = 'Cargando...';
+        subtitle.textContent = '';
+        body.innerHTML = '<div class="col-12 text-center text-muted py-4">Cargando informacion...</div>';
+        alert.classList.add('d-none');
+
+        bootstrap.Modal.getOrCreateInstance(modalRelacionReserva).show();
+
+        try {
+            const response = await fetch(relatedButton.dataset.url, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudo cargar la ficha relacionada.');
+            }
+
+            renderRelacionModal(data);
+        } catch (error) {
+            alert.className = 'alert alert-danger';
+            alert.textContent = error.message;
+            alert.classList.remove('d-none');
+            body.innerHTML = '';
+        }
+    });
+
+    document.addEventListener('click', async function (event) {
         const editButton = event.target.closest('.btn-editar-pasajero');
         if (editButton) {
             const pasajeroId = editButton.dataset.id;
@@ -1454,8 +1826,96 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    document.querySelectorAll('.addon-reserva-cantidad').forEach(function (select) {
+        select.addEventListener('change', function () {
+            const hidden = this.closest('.col-md-4')?.querySelector('.addon-reserva-id');
+            if (hidden) {
+                hidden.disabled = parseInt(this.value || '0', 10) === 0;
+            }
+
+            const addons = addonPayloadDesdeSelects();
+            const resumenActual = {
+                moneda: document.getElementById('finResumenMoneda')?.textContent || 'USD',
+                tarifa_por_persona: parseFloat(document.getElementById('finResumenTarifa')?.textContent || '0'),
+                cantidad_personas: parseInt(document.getElementById('finResumenPersonas')?.textContent || '0', 10),
+                subtotal_reserva: parseFloat(document.getElementById('finResumenSubtotal')?.textContent || '0'),
+                addons_total: addons.reduce((acc, item) => acc + item.monto_total, 0),
+                descuento: parseFloat((document.getElementById('finResumenDescuento')?.textContent || '0').replace('-', '').trim() || '0'),
+                cantidad_pagos_realizados: parseInt(document.getElementById('finResumenPagosCount')?.textContent || '0', 10),
+                monto_total_pagado: parseFloat(document.getElementById('finResumenPagado')?.textContent || '0'),
+                addons,
+            };
+
+            resumenActual.total_reserva = Math.max(0, resumenActual.subtotal_reserva + resumenActual.addons_total - resumenActual.descuento);
+            resumenActual.saldo_por_pagar = Math.max(0, resumenActual.total_reserva - resumenActual.monto_total_pagado);
+            resumenActual.pct_pago = resumenActual.total_reserva > 0
+                ? Math.min(100, Math.round((resumenActual.monto_total_pagado / resumenActual.total_reserva) * 100))
+                : 0;
+
+            renderAddonTable(addons);
+            updateFinancialSummary(resumenActual);
+        });
+    });
+
+    document.getElementById('btnGuardarAddonsReserva')?.addEventListener('click', async function () {
+        const spinner = document.getElementById('spinnerAddonsReserva');
+        const payload = {
+            addons: addonPayloadDesdeSelects().map(function (addon) {
+                return {
+                    addon_id: addon.addon_id,
+                    cantidad: addon.cantidad,
+                };
+            }),
+        };
+
+        spinner.classList.remove('d-none');
+        this.disabled = true;
+        addonsAlert?.classList.add('d-none');
+
+        try {
+            const response = await fetch(addonsSyncUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrf,
+                },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.ok) {
+                throw new Error(data.message || 'No se pudieron guardar los addons.');
+            }
+
+            renderAddonTable(data.addons || []);
+            updateFinancialSummary(data.resumen_financiero);
+            mostrarAlerta(data.message || 'Addons actualizados correctamente.', 'success', addonsAlert);
+        } catch (error) {
+            mostrarAlerta(error.message, 'danger', addonsAlert);
+        } finally {
+            spinner.classList.add('d-none');
+            this.disabled = false;
+        }
+    });
+
     syncTableEmptyState();
     syncSideEmptyState();
+    renderAddonTable(@json($addonsReservaJs));
+    updateFinancialSummary({
+        moneda: @json($reserva->moneda),
+        tarifa_por_persona: {{ (float) $tarifaPorPersona }},
+        cantidad_personas: {{ (int) $cantidadPersonasFinanciera }},
+        subtotal_reserva: {{ (float) $subtotalReserva }},
+        addons_total: {{ (float) $addonsReservaTotal }},
+        descuento: {{ (float) $descuentoReserva }},
+        total_reserva: {{ (float) $totalReserva }},
+        cantidad_pagos_realizados: {{ (int) $cantidadPagosRealizados }},
+        monto_total_pagado: {{ (float) $montoTotalPagado }},
+        saldo_por_pagar: {{ (float) $saldoPorPagar }},
+        pct_pago: {{ (int) $pctPago }},
+        addons: @json($addonsReservaJs),
+    });
     actualizarContadoresDesdeResumen({
         num_pasajeros: {{ $reserva->num_pasajeros }},
         num_adultos: {{ $reserva->num_adultos }},

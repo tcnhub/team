@@ -74,6 +74,26 @@ class AgenteController extends Controller
         return view('admin.agentes.show', compact('agente'));
     }
 
+    public function showModalAjax(Agente $agente)
+    {
+        return response()->json([
+            'ok' => true,
+            'title' => trim($agente->nombres . ' ' . $agente->apellidos),
+            'subtitle' => 'Agente relacionado a la reserva',
+            'show_url' => route('admin.agentes.show', $agente),
+            'fields' => [
+                ['label' => 'Codigo', 'value' => $agente->codigo_agente ?: 'Sin registro'],
+                ['label' => 'Email', 'value' => $agente->email ?: 'Sin registro'],
+                ['label' => 'Telefono', 'value' => $agente->telefono ?: 'Sin registro'],
+                ['label' => 'Celular', 'value' => $agente->celular ?: 'Sin registro'],
+                ['label' => 'DNI', 'value' => $agente->dni ?: 'Sin registro'],
+                ['label' => 'Comision', 'value' => isset($agente->comision_porcentaje) ? $agente->comision_porcentaje . '%' : 'Sin registro'],
+                ['label' => 'Fecha de ingreso', 'value' => optional($agente->fecha_ingreso)->format('d/m/Y') ?: 'Sin registro'],
+                ['label' => 'Estado', 'value' => $agente->estado ? 'Activo' : 'Inactivo'],
+            ],
+        ]);
+    }
+
     public function edit(Agente $agente)
     {
         return view('admin.agentes.edit', compact('agente'));

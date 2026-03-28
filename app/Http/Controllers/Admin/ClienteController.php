@@ -105,6 +105,29 @@ class ClienteController extends Controller
         return view('admin.clientes.show', compact('cliente'));
     }
 
+    public function showModalAjax(Cliente $cliente)
+    {
+        $cliente->load(['pais', 'idioma', 'dieta']);
+
+        return response()->json([
+            'ok' => true,
+            'title' => $cliente->nombre_completo,
+            'subtitle' => 'Cliente relacionado a la reserva',
+            'show_url' => route('admin.clientes.show', $cliente),
+            'fields' => [
+                ['label' => 'Documento', 'value' => strtoupper($cliente->tipo_documento ?? '-') . ' - ' . ($cliente->numero_documento ?? '-')],
+                ['label' => 'Email', 'value' => $cliente->email ?: 'Sin registro'],
+                ['label' => 'Telefono', 'value' => $cliente->telefono ?: 'Sin registro'],
+                ['label' => 'WhatsApp', 'value' => $cliente->whatsapp ?: 'Sin registro'],
+                ['label' => 'Pais', 'value' => $cliente->pais?->nombre ?: 'Sin registro'],
+                ['label' => 'Idioma', 'value' => $cliente->idioma?->nombre ?: 'Sin registro'],
+                ['label' => 'Dieta', 'value' => $cliente->dieta?->nombre ?: 'Sin registro'],
+                ['label' => 'Fecha de nacimiento', 'value' => optional($cliente->fecha_nacimiento)->format('d/m/Y') ?: 'Sin registro'],
+                ['label' => 'Estado', 'value' => $cliente->activo ? 'Activo' : 'Inactivo'],
+            ],
+        ]);
+    }
+
     /**
      * Show the form for editing the specified resource.
      */

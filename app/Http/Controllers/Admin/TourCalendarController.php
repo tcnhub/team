@@ -164,16 +164,24 @@ class TourCalendarController extends Controller
     public function reservasCalendario(Request $request, Tour $tour)
     {
         $anio = (int) $request->get('anio', now()->year);
+        $inicioAnio = Carbon::create($anio, 1, 1)->startOfDay();
+        $finAnio = Carbon::create($anio, 12, 31)->endOfDay();
 
-        // Todas las reservas de este tour en el año seleccionado
+        // Todas las reservas de este tour que intersectan el ano seleccionado
         $reservas = Reserva::with(['cliente', 'agente'])
-            ->where(function ($q) use ($tour) {
-                $q->whereHas('availability', fn($sq) => $sq->where('tour_id', $tour->id))
-                  ->orWhere(function ($sq) use ($tour) {
-                      // Reservas sin availability_id pero vinculadas al tour por descripcion_servicio (fallback no requerido)
-                  });
+            ->where('tour_id', $tour->id)
+            ->where(function ($q) use ($inicioAnio, $finAnio) {
+                $q->whereBetween('fecha_inicio', [
+                    $inicioAnio->toDateString(),
+                    $finAnio->toDateString(),
+                ])->orWhere(function ($sq) use ($inicioAnio, $finAnio) {
+                    $sq->whereDate('fecha_inicio', '<=', $finAnio->toDateString())
+                        ->where(function ($endQ) use ($inicioAnio) {
+                            $endQ->whereDate('fecha_fin', '>=', $inicioAnio->toDateString())
+                                ->orWhereNull('fecha_fin');
+                        });
+                });
             })
-            ->whereYear('fecha_inicio', $anio)
             ->whereNotIn('estado_reserva', ['cancelada', 'reembolsada'])
             ->orderBy('fecha_inicio')
             ->get();
@@ -192,7 +200,7 @@ class TourCalendarController extends Controller
         $mapaFechas = [];
         foreach ($reservas as $reserva) {
             $cursor = $reserva->fecha_inicio->copy();
-            $fin    = $reserva->fecha_fin_calculada;
+            $fin = $reserva->fecha_fin_calculada;
             while ($cursor->lte($fin)) {
                 $key = $cursor->format('Y-m-d');
                 $mapaFechas[$key][] = $reserva;
@@ -200,12 +208,12 @@ class TourCalendarController extends Controller
             }
         }
 
-        // Años disponibles para el selector
+        // Anos disponibles para el selector
         $aniosDisponibles = collect(range(now()->year - 1, now()->year + 2));
 
         // Para el modal de nueva reserva
         $clientes = Cliente::where('activo', true)->orderBy('nombre_completo')->get(['id', 'nombre_completo', 'numero_documento']);
-        $agentes  = Agente::where('estado', true)->get(['id', 'nombres', 'apellidos']);
+        $agentes = Agente::where('estado', true)->get(['id', 'nombres', 'apellidos']);
 
         return view('admin.tours.reservas-calendario', compact(
             'tour', 'reservas', 'mapaFechas', 'anio', 'aniosDisponibles', 'clientes', 'agentes'

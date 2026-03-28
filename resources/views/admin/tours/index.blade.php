@@ -277,33 +277,20 @@
                         </select>
                     </div>
                     {{-- Fecha Inicio --}}
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Fecha Inicio <span class="text-danger">*</span></label>
                         <input type="text" id="nrt_fecha_inicio" class="form-control flatpickr-date" data-date-format="Y-m-d">
                         <div class="invalid-feedback" id="err_nrt_fecha_inicio"></div>
                     </div>
                     {{-- Fecha Fin --}}
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">Fecha Fin</label>
                         <input type="text" id="nrt_fecha_fin" class="form-control flatpickr-date" data-date-format="Y-m-d">
                     </div>
-                    {{-- Pasajeros --}}
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">Pasajeros</label>
-                        <input type="number" id="nrt_num_pasajeros" class="form-control" value="1" min="1" readonly>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">Adultos</label>
-                        <input type="number" id="nrt_num_adultos" class="form-control" value="1" min="0" readonly>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">Estudiantes</label>
-                        <input type="number" id="nrt_num_estudiantes" class="form-control" value="0" min="0" readonly>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label fw-semibold">Niños</label>
-                        <input type="number" id="nrt_num_ninos" class="form-control" value="0" min="0" readonly>
-                    </div>
+                    <input type="hidden" id="nrt_num_pasajeros" value="1">
+                    <input type="hidden" id="nrt_num_adultos" value="1">
+                    <input type="hidden" id="nrt_num_estudiantes" value="0">
+                    <input type="hidden" id="nrt_num_ninos" value="0">
                     {{-- Precio --}}
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Precio Total (USD) <span class="text-danger">*</span></label>
@@ -402,7 +389,9 @@
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="nrt_resumen_tarifa">0.00</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="nrt_resumen_personas">1</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="nrt_resumen_subtotal">0.00</span></strong></div>
+                                <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Items de addons</span><strong><span id="nrt_resumen_addons_items">0</span></strong></div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Addons</span><strong>USD <span id="nrt_resumen_addons">0.00</span></strong></div>
+                                <div id="nrt_resumen_addons_detalle" class="small text-muted border rounded bg-white p-2 mb-2">No hay addons seleccionados.</div>
                                 <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="nrt_resumen_descuento">0.00</span></strong></div>
                                 <hr>
                                 <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="nrt_resumen_total">0.00</span></strong></div>
@@ -488,17 +477,27 @@
         const pagoInicial = parseFloat(document.getElementById('nrt_pago_monto').value || '0');
         const personas = parseInt(document.getElementById('nrt_num_pasajeros').value || '0', 10);
         const subtotal = precio * personas;
-        const addonsTotal = Array.from(document.querySelectorAll('.nrt-addon-cantidad')).reduce((acc, select) => {
+        const addonsSeleccionados = Array.from(document.querySelectorAll('.nrt-addon-cantidad')).map((select) => {
             const monto = parseFloat(select.dataset.monto || '0');
             const qty = parseInt(select.value || '0', 10);
-            return acc + (monto * qty);
-        }, 0);
+            return {
+                nombre: select.dataset.nombre || 'Addon',
+                qty,
+                total: monto * qty,
+            };
+        }).filter((item) => item.qty > 0);
+        const addonsTotal = addonsSeleccionados.reduce((acc, item) => acc + item.total, 0);
+        const addonsItems = addonsSeleccionados.reduce((acc, item) => acc + item.qty, 0);
         const total = Math.max(0, subtotal + addonsTotal - descuento);
         const saldo = Math.max(0, total - pagoInicial);
         document.getElementById('nrt_resumen_tarifa').textContent = precio.toFixed(2);
         document.getElementById('nrt_resumen_personas').textContent = personas;
         document.getElementById('nrt_resumen_subtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('nrt_resumen_addons_items').textContent = addonsItems;
         document.getElementById('nrt_resumen_addons').textContent = addonsTotal.toFixed(2);
+        document.getElementById('nrt_resumen_addons_detalle').innerHTML = addonsSeleccionados.length
+            ? addonsSeleccionados.map((item) => `<div class="d-flex justify-content-between gap-2 mb-1"><span>${item.nombre} x ${item.qty}</span><strong>USD ${item.total.toFixed(2)}</strong></div>`).join('')
+            : 'No hay addons seleccionados.';
         document.getElementById('nrt_resumen_descuento').textContent = descuento.toFixed(2);
         document.getElementById('nrt_resumen_total').textContent = total.toFixed(2);
         document.getElementById('nrt_resumen_inicial').textContent = pagoInicial.toFixed(2);
@@ -537,20 +536,28 @@
         container.innerHTML = '';
         if (!addons.length) {
             empty.textContent = 'No hay addons disponibles para este tour.';
+            actualizarResumenNRT();
             return;
         }
         empty.textContent = '';
         addons.forEach((addon, index) => {
             container.insertAdjacentHTML('beforeend', `
-                <div class="col-md-6">
-                    <div class="border rounded p-3 h-100">
-                        <div class="fw-semibold mb-1">${addon.nombre} · USD ${parseFloat(addon.monto).toFixed(2)}</div>
-                        <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
-                        <input type="hidden" name="nrt_addons[${index}][addon_id]" class="nrt-addon-id-input" value="${addon.id}" disabled>
-                        <label class="form-label small">Cantidad</label>
-                        <select class="form-select form-select-sm nrt-addon-cantidad" data-monto="${addon.monto}">
-                            ${Array.from({ length: 11 }, (_, qty) => `<option value="${qty}">${qty}</option>`).join('')}
-                        </select>
+                <div class="col-12">
+                    <div class="border rounded p-3">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-8">
+                                <div class="fw-semibold mb-1">${addon.nombre}</div>
+                                <p class="text-muted small mb-2">${addon.descripcion ?? 'Sin descripción'}</p>
+                                <div class="small text-primary">USD ${parseFloat(addon.monto).toFixed(2)} por unidad</div>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="hidden" name="nrt_addons[${index}][addon_id]" class="nrt-addon-id-input" value="${addon.id}" disabled>
+                                <label class="form-label small">Cantidad</label>
+                                <select class="form-select nrt-addon-cantidad" data-monto="${addon.monto}" data-nombre="${addon.nombre}">
+                                    ${Array.from({ length: 11 }, (_, qty) => `<option value="${qty}">${qty}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `);
@@ -562,6 +569,7 @@
                 actualizarResumenNRT();
             });
         });
+        actualizarResumenNRT();
     }
 
     async function cargarAddonsNRT() {

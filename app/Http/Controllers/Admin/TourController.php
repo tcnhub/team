@@ -82,6 +82,28 @@ class TourController extends Controller
         return view('admin.tours.show', compact('tour'));
     }
 
+    public function showModalAjax(Tour $tour)
+    {
+        $tour->load(['categorias', 'addons']);
+
+        return response()->json([
+            'ok' => true,
+            'title' => $tour->nombre_tour,
+            'subtitle' => 'Tour relacionado a la reserva',
+            'show_url' => route('admin.tours.show', $tour),
+            'fields' => [
+                ['label' => 'Codigo', 'value' => $tour->codigo_tour],
+                ['label' => 'Precio base', 'value' => 'USD ' . number_format((float) $tour->precio_base, 2)],
+                ['label' => 'Duracion', 'value' => trim(($tour->duracion_dias ?: 0) . ' dias / ' . ($tour->duracion_noches ?: 0) . ' noches')],
+                ['label' => 'Dificultad', 'value' => $tour->nivel_dificultad ?: 'Sin registro'],
+                ['label' => 'Destino', 'value' => $tour->destino_principal ?: 'Sin registro'],
+                ['label' => 'Salida desde', 'value' => $tour->salida_desde ?: 'Sin registro'],
+                ['label' => 'Capacidad', 'value' => ($tour->min_personas ?: 0) . ' - ' . ($tour->max_personas ?: 0) . ' personas'],
+                ['label' => 'Estado', 'value' => $tour->estado ? 'Activo' : 'Inactivo'],
+            ],
+        ]);
+    }
+
     public function edit(Tour $tour)
     {
         $categorias = Categoria::where('estado', true)->orderBy('nombre')->get();

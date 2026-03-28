@@ -6,7 +6,15 @@
         @method('PUT')
     @endif
 
+    @php $isEditReserva = isset($reserva) && $reserva->exists; @endphp
+
+    @if($isEditReserva)
     <div class="row g-3">
+    @else
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="row g-3">
+    @endif
 
         <!-- ── Código de Reserva (solo lectura) ── -->
         <div class="col-md-3">
@@ -308,6 +316,30 @@
         </div>
     @endunless
 
+    @if(!$isEditReserva)
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border shadow-none bg-light-subtle mb-0">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0"><i class="ri-file-list-3-line me-1"></i>Resumen de la reserva</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Tarifa por persona</span><strong>USD <span id="resumenReservaTarifa">0.00</span></strong></div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Personas</span><strong><span id="resumenReservaPersonas">1</span></strong></div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><strong>USD <span id="resumenReservaSubtotal">0.00</span></strong></div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Items de addons</span><strong><span id="resumenReservaAddonsItems">0</span></strong></div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Addons</span><strong>USD <span id="resumenReservaAddons">0.00</span></strong></div>
+                    <div id="resumenReservaAddonsDetalle" class="small text-muted border rounded bg-white p-2 mb-2">No hay addons seleccionados.</div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Descuento</span><strong class="text-danger">USD <span id="resumenReservaDescuento">0.00</span></strong></div>
+                    <hr>
+                    <div class="d-flex justify-content-between mb-2"><span class="fw-semibold">Total de la reserva</span><strong class="text-success">USD <span id="resumenReservaTotal">0.00</span></strong></div>
+                    <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Pago inicial</span><strong>USD <span id="resumenReservaInicial">0.00</span></strong></div>
+                    <div class="d-flex justify-content-between small"><span class="text-muted">Saldo pendiente</span><strong>USD <span id="resumenReservaSaldo">0.00</span></strong></div>
+                </div>
+            </div>
+        </div>
+    @endif
     </div>
 
     <div class="mt-4">
@@ -386,6 +418,7 @@
 
 <script>
 (function () {
+    const isEditReserva = @json($isEditReserva);
     // ── Variables globales del formulario ──────────────────────────────────
     const AVAIL_BASE_URL = '{{ rtrim(url("admin/tours"), "/") }}';
     const selectedAddons = @json(collect(old('addons', isset($reserva) ? $reserva->addons->map(fn($addon) => ['addon_id' => $addon->id, 'cantidad' => $addon->pivot->cantidad])->values()->all() : [])));
@@ -408,6 +441,16 @@
     const availHint    = document.getElementById('availabilityHint');
     const addonsContainer = document.getElementById('addonsReservaContainer');
     const addonsEmpty = document.getElementById('addonsReservaEmpty');
+    const oldPassengerFields = [
+        document.querySelector('input[name="num_pasajeros"]')?.closest('.col-md-3'),
+        document.querySelector('input[name="num_adultos"]')?.closest('.col-md-3'),
+        document.querySelector('input[name="num_ninos"]')?.closest('.col-md-3'),
+        document.querySelector('input[name="num_bebes"]')?.closest('.col-md-3'),
+    ].filter(Boolean);
+
+    if (!isEditReserva) {
+        oldPassengerFields.forEach((el) => el.classList.add('d-none'));
+    }
 
     function calcFechaFin() {
         if (!tourDias || !inputFechaI.value) return;
@@ -544,6 +587,7 @@
         selectTour.dispatchEvent(new Event('change'));
     } else {
         addonsEmpty.textContent = 'Selecciona un tour para cargar addons disponibles.';
+        actualizarResumenReservaCreate();
     }
 
     // Hint de pago inicial: mostrar saldo sugerido al escribir precio
@@ -552,9 +596,16 @@
     if (inputPrecio && inputPagoInicial && pagoHint) {
         inputPrecio.addEventListener('input', function() {
             const precio = parseFloat(this.value) || 0;
-            if (precio > 0) pagoHint.textContent = `Total a pagar: ${precio.toFixed(2)}`;
+            if (precio > 0 && @json($isEditReserva)) pagoHint.textContent = `Total a pagar: ${precio.toFixed(2)}`;
+            actualizarResumenReservaCreate();
         });
+        inputPagoInicial.addEventListener('input', actualizarResumenReservaCreate);
     }
+    document.querySelector('[name="descuento"]')?.addEventListener('input', actualizarResumenReservaCreate);
+    document.getElementById('btnGenerarPasajerosReservaCreate')?.addEventListener('click', generarPasajerosReservaCreate);
+    ['cantidadAdultosCreate', 'cantidadEstudiantesCreate', 'cantidadNinosCreate'].forEach((id) => {
+        document.getElementById(id)?.addEventListener('change', sincronizarPasajerosReservaCreate);
+    });
 
     // ── Modal: Crear Nuevo Cliente ─────────────────────────────────────────
     const CSRF      = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';

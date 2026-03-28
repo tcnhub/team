@@ -76,11 +76,15 @@ Route::prefix('admin')
                 ->name('reservas.pasajeros.update-ajax');
             Route::delete('reservas/{reserva}/pasajeros/{pasajero}/destroy-ajax', [ReservaController::class, 'destroyPasajeroAjax'])
                 ->name('reservas.pasajeros.destroy-ajax');
+            Route::post('reservas/{reserva}/addons-sync-ajax', [ReservaController::class, 'syncAddonsAjax'])
+                ->name('reservas.addons.sync-ajax');
             Route::get('tours/{tour}/availabilities-json', [ReservaController::class, 'availabilitiesPorTour'])
                 ->name('tours.availabilities.json');
 
             // ── Clientes ───────────────────────────────────────────────────
             Route::resource('clientes', ClienteController::class);
+            Route::get('clientes/{cliente}/modal-ajax', [ClienteController::class, 'showModalAjax'])
+                ->name('clientes.modal-ajax');
             Route::resource('addons', AddonController::class);
             Route::resource('pasajeros', PasajeroController::class);
             Route::get('pasajeros/reservas/{reserva}/relacion', [PasajeroController::class, 'reservaRelacion'])
@@ -102,6 +106,8 @@ Route::prefix('admin')
 
             // ── Agentes ────────────────────────────────────────────────────
             Route::resource('agentes', AgenteController::class);
+            Route::get('agentes/{agente}/modal-ajax', [AgenteController::class, 'showModalAjax'])
+                ->name('agentes.modal-ajax');
 
             // ── Pagos ──────────────────────────────────────────────────────
             Route::resource('pagos', PagoController::class);
@@ -109,5 +115,7 @@ Route::prefix('admin')
             // ── Categorías de Tours ────────────────────────────────────────
             Route::resource('categorias', CategoriaController::class);
             Route::resource('configuraciones', ConfiguracionController::class);
+            Route::get('tours/{tour}/modal-ajax', [TourController::class, 'showModalAjax'])
+                ->name('tours.modal-ajax');
         });
     });

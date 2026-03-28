@@ -352,6 +352,46 @@ class ReservaController extends Controller
         ]);
     }
 
+    public function syncAddonsAjax(Request $request, Reserva $reserva)
+    {
+        if (! $reserva->tour_id) {
+            return response()->json(['ok' => false, 'message' => 'La reserva no tiene un tour asociado.'], 422);
+        }
+
+        $addonIdsDisponibles = $reserva->tour()->with('addons:id')->first()?->addons?->pluck('id')->all() ?? [];
+
+        $validated = $request->validate([
+            'addons' => ['nullable', 'array'],
+            'addons.*.addon_id' => ['required_with:addons', 'integer', Rule::in($addonIdsDisponibles)],
+            'addons.*.cantidad' => ['required_with:addons', 'integer', 'min:1'],
+        ]);
+
+        $addonsData = collect($validated['addons'] ?? [])->values();
+
+        DB::transaction(function () use ($reserva, $addonsData) {
+            $addonsTotal = $this->calcularTotalAddons($addonsData);
+            $this->syncReservaAddons($reserva, $addonsData);
+
+            $reserva->update([
+                'precio_final' => $this->calcularTotalReserva(
+                    (float) $reserva->precio_total,
+                    (int) $reserva->num_pasajeros,
+                    $addonsTotal,
+                    (float) ($reserva->descuento ?? 0)
+                ),
+            ]);
+        });
+
+        $reservaActualizada = $reserva->fresh(['addons', 'pagos']);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Addons actualizados correctamente.',
+            'addons' => $reservaActualizada->addons->map(fn (Addon $addon) => $this->addonPayload($addon))->values(),
+            'resumen_financiero' => $this->resumenFinancieroPayload($reservaActualizada),
+        ]);
+    }
+
     /**
      * Show the form for editing the specified resource.
      */
@@ -706,6 +746,50 @@ class ReservaController extends Controller
             'whatsapp' => $pasajero->whatsapp,
             'tour_nombre' => $pasajero->tour?->nombre_tour,
             'show_url' => route('admin.pasajeros.show', $pasajero),
+        ];
+    }
+
+    private function addonPayload(Addon $addon): array
+    {
+        return [
+            'id' => $addon->id,
+            'nombre' => $addon->nombre,
+            'descripcion' => $addon->descripcion,
+            'cantidad' => (int) ($addon->pivot->cantidad ?? 0),
+            'monto_unitario' => (float) ($addon->pivot->monto_unitario ?? $addon->monto),
+            'monto_total' => (float) ($addon->pivot->monto_total ?? 0),
+        ];
+    }
+
+    private function resumenFinancieroPayload(Reserva $reserva): array
+    {
+        $cantidadPersonas = max(1, (int) $reserva->num_pasajeros);
+        $tarifaPorPersona = (float) $reserva->precio_total;
+        $subtotalReserva = $tarifaPorPersona * $cantidadPersonas;
+        $addons = $reserva->addons->map(fn (Addon $addon) => $this->addonPayload($addon))->values();
+        $addonsTotal = (float) $addons->sum('monto_total');
+        $descuento = (float) ($reserva->descuento ?? 0);
+        $totalReserva = max(0, $subtotalReserva + $addonsTotal - $descuento);
+        $pagosRealizados = $reserva->pagos
+            ->whereNotIn('estado', ['rechazado'])
+            ->whereNotIn('tipo_pago', ['proveedor', 'devolucion']);
+        $montoTotalPagado = (float) $pagosRealizados->sum('monto');
+        $saldoPorPagar = max(0, $totalReserva - $montoTotalPagado);
+        $pctPago = $totalReserva > 0 ? min(100, round(($montoTotalPagado / $totalReserva) * 100)) : 0;
+
+        return [
+            'moneda' => $reserva->moneda,
+            'tarifa_por_persona' => $tarifaPorPersona,
+            'cantidad_personas' => $cantidadPersonas,
+            'subtotal_reserva' => $subtotalReserva,
+            'addons_total' => $addonsTotal,
+            'descuento' => $descuento,
+            'total_reserva' => $totalReserva,
+            'cantidad_pagos_realizados' => $pagosRealizados->count(),
+            'monto_total_pagado' => $montoTotalPagado,
+            'saldo_por_pagar' => $saldoPorPagar,
+            'pct_pago' => $pctPago,
+            'addons' => $addons,
         ];
     }
 

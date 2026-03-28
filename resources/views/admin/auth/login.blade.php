@@ -148,8 +148,26 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="text-center">
-                        <p class="mb-0">&copy;
-                            <script>document.write(new Date().getFullYear())</script> Velzon. Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesbrand
+                        @php
+                            $empresa = $globalConfiguraciones['Nombre de la Empresa'] ?? config('app.name');
+                            $ruc = $globalConfiguraciones['RUC'] ?? null;
+                            $direccion = $globalConfiguraciones['Direccion'] ?? null;
+                            $telefono = $globalConfiguraciones['telefono'] ?? null;
+                            $web = $globalConfiguraciones['Pagina Web'] ?? null;
+
+                            $detalleEmpresa = collect([
+                                $empresa,
+                                $ruc ? 'RUC: ' . $ruc : null,
+                                $direccion,
+                                $telefono ? 'Tel: ' . $telefono : null,
+                            ])->filter()->implode(' | ');
+                        @endphp
+                        <p class="mb-0">
+                            &copy; <script>document.write(new Date().getFullYear())</script> {{ $detalleEmpresa }}
+                            @if ($web)
+                                | <a href="{{ $web }}" target="_blank" rel="noopener noreferrer">{{ $web }}</a>
+                            @endif
+                            | <a href="https://www.tecnodus.com" target="_blank" rel="noopener noreferrer">Tecnodus</a>
                         </p>
                     </div>
                 </div>
@@ -167,4 +185,3 @@
 </body>
 
 </html>
-
