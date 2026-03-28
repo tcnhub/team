@@ -49,6 +49,11 @@ class Agente extends Model
         return "{$this->nombres} {$this->apellidos}";
     }
 
+    public function setEstadoAttribute($value): void
+    {
+        $this->attributes['estado'] = in_array($value, [true, 1, '1', 'activo'], true) ? 1 : 0;
+    }
+
     // Scopes
     public function scopeActivos($query)
     {

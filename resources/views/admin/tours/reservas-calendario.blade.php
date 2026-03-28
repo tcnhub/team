@@ -248,7 +248,7 @@
                     {{-- Fecha inicio (pre-llenada) --}}
                     <div class="col-md-3">
                         <label class="form-label fw-semibold">Fecha Inicio <span class="text-danger">*</span></label>
-                        <input type="date" id="mr_fecha_inicio" class="form-control" required>
+                                        <input type="text" id="mr_fecha_inicio" class="form-control flatpickr-date" data-date-format="Y-m-d" required>
                         <div class="invalid-feedback" id="err_mr_fecha_inicio"></div>
                     </div>
 
@@ -258,7 +258,7 @@
                             Fecha Fin
                             <small class="text-muted">(por duración)</small>
                         </label>
-                        <input type="date" id="mr_fecha_fin" class="form-control">
+                                        <input type="text" id="mr_fecha_fin" class="form-control flatpickr-date" data-date-format="Y-m-d">
                     </div>
 
                     {{-- Pasajeros --}}
@@ -364,16 +364,29 @@ document.querySelectorAll('.res-cell:not(.empty)').forEach(cell => {
 
 function abrirModalReserva(fecha) {
     limpiarErroresModal();
-    document.getElementById('mr_fecha_inicio').value = fecha;
+    if (window.setFlatpickrDate) {
+        window.setFlatpickrDate(document.getElementById('mr_fecha_inicio'), fecha);
+    } else {
+        document.getElementById('mr_fecha_inicio').value = fecha;
+    }
     document.getElementById('modalFechaLabel').textContent = formatFecha(fecha);
 
     // Calcular fecha_fin automáticamente
     if (TOUR_DIAS) {
         const d = new Date(fecha + 'T00:00:00');
         d.setDate(d.getDate() + TOUR_DIAS - 1);
-        document.getElementById('mr_fecha_fin').value = d.toISOString().slice(0, 10);
+        const fechaFin = d.toISOString().slice(0, 10);
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(document.getElementById('mr_fecha_fin'), fechaFin);
+        } else {
+            document.getElementById('mr_fecha_fin').value = fechaFin;
+        }
     } else {
-        document.getElementById('mr_fecha_fin').value = '';
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(document.getElementById('mr_fecha_fin'), '');
+        } else {
+            document.getElementById('mr_fecha_fin').value = '';
+        }
     }
 
     // Prellenar precio del tour si hay uno
@@ -540,8 +553,15 @@ function limpiarFormularioModal() {
         const el = document.getElementById(id);
         if (!el) return;
         if (el.tagName === 'SELECT') el.selectedIndex = 0;
-        else el.value = (id === 'mr_num_pasajeros' || id === 'mr_num_adultos') ? '1'
-                      : (id === 'mr_num_ninos' || id === 'mr_descuento') ? '0' : '';
+        else {
+            const value = (id === 'mr_num_pasajeros' || id === 'mr_num_adultos') ? '1'
+                : (id === 'mr_num_ninos' || id === 'mr_descuento') ? '0' : '';
+            if (window.setFlatpickrDate && (id === 'mr_fecha_inicio' || id === 'mr_fecha_fin')) {
+                window.setFlatpickrDate(el, value);
+            } else {
+                el.value = value;
+            }
+        }
     });
 }
 </script>

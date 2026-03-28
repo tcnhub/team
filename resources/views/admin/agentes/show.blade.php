@@ -19,16 +19,8 @@
                             <div class="card-header align-items-center d-flex">
                                 <h4 class="card-title mb-0 flex-grow-1">
                                     {{ $agente->nombre_completo }}
-                                    @php
-                                        $estadoClases = [
-                                            'activo'     => 'bg-success-subtle text-success border border-success-subtle',
-                                            'inactivo'   => 'bg-secondary-subtle text-secondary border border-secondary-subtle',
-                                            'vacaciones' => 'bg-info-subtle text-info border border-info-subtle',
-                                            'baja'       => 'bg-danger-subtle text-danger border border-danger-subtle',
-                                        ];
-                                    @endphp
-                                    <span class="badge {{ $estadoClases[$agente->estado] ?? '' }} ms-2">
-                                        {{ ucfirst($agente->estado) }}
+                                    <span class="badge {{ $agente->estado ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle' }} ms-2">
+                                        {{ $agente->estado ? 'Activo' : 'Inactivo' }}
                                     </span>
                                 </h4>
                                 <div class="flex-shrink-0">

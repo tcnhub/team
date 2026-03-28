@@ -263,6 +263,28 @@
                             </div>
                         </div>
 
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="ri-group-line me-2 text-info"></i>Pasajeros
+                                    <span class="badge bg-secondary ms-1">{{ $reserva->pasajeros->count() }}</span>
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                @forelse($reserva->pasajeros as $pasajero)
+                                    <div class="d-flex justify-content-between border-bottom py-2">
+                                        <div>
+                                            <a href="{{ route('admin.pasajeros.show', $pasajero) }}" class="fw-semibold">{{ $pasajero->nombre_completo }}</a>
+                                            <div class="text-muted small">{{ $pasajero->numero_documento }}</div>
+                                        </div>
+                                        <a href="{{ route('admin.tours.show', $pasajero->tour) }}" class="small">{{ $pasajero->tour?->nombre_tour ?? 'Sin tour' }}</a>
+                                    </div>
+                                @empty
+                                    <small class="text-muted">Sin pasajeros vinculados.</small>
+                                @endforelse
+                            </div>
+                        </div>
+
                         {{-- Card: Agente --}}
                         @if($reserva->agente)
                             <div class="card mt-3">

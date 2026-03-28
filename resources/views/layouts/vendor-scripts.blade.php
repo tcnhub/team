@@ -14,6 +14,15 @@
 // Auto-filter: forms with data-auto-filter submit on select change or text/date input (debounced)
 document.addEventListener('DOMContentLoaded', function () {
     if (window.flatpickr) {
+        window.setFlatpickrDate = function (input, value) {
+            if (!input) return;
+            if (input._flatpickr) {
+                input._flatpickr.setDate(value || null, false, input.dataset.dateFormat || 'Y-m-d');
+                return;
+            }
+            input.value = value || '';
+        };
+
         if (window.flatpickr.l10ns && window.flatpickr.l10ns.es) {
             window.flatpickr.localize(window.flatpickr.l10ns.es);
         }
@@ -41,6 +50,10 @@ document.addEventListener('DOMContentLoaded', function () {
             inp.addEventListener('input', function () {
                 clearTimeout(timer);
                 timer = setTimeout(function () { form.submit(); }, 600);
+            });
+            inp.addEventListener('change', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () { form.submit(); }, 300);
             });
         });
     });

@@ -661,21 +661,24 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('admins');
-        Schema::dropIfExists('tour_precios');
-        Schema::dropIfExists('categoria_tour');
         Schema::dropIfExists('pagos');
-        Schema::dropIfExists('tours');
-        Schema::dropIfExists('categorias');
-        Schema::dropIfExists('paises');
-        Schema::dropIfExists('idiomas');
-        Schema::dropIfExists('dietas');
-        Schema::dropIfExists('reservas');
         Schema::dropIfExists('pasajeros');
-        Schema::dropIfExists('agentes');
-        Schema::dropIfExists('clientes');
+        Schema::dropIfExists('grupos');
+        Schema::dropIfExists('reservas');
+        Schema::dropIfExists('proveedores');
         Schema::dropIfExists('tipo_proveedores');
         Schema::dropIfExists('tour_availability');
         Schema::dropIfExists('tour_calendar_years');
+        Schema::dropIfExists('tour_precios');
+        Schema::dropIfExists('categoria_tour');
+        Schema::dropIfExists('agentes');
+        Schema::dropIfExists('tours');
+        Schema::dropIfExists('cliente_dieta');
+        Schema::dropIfExists('clientes');
+        Schema::dropIfExists('categorias');
+        Schema::dropIfExists('dietas');
+        Schema::dropIfExists('idiomas');
+        Schema::dropIfExists('paises');
+        Schema::dropIfExists('admins');
     }
 };

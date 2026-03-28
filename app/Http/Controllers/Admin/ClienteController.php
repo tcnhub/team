@@ -101,7 +101,7 @@ class ClienteController extends Controller
      */
     public function show(Cliente $cliente)
     {
-        $cliente->load(['pais', 'idioma', 'dieta']);
+        $cliente->load(['pais', 'idioma', 'dieta', 'pasajeros.reserva', 'pasajeros.tour']);
         return view('admin.clientes.show', compact('cliente'));
     }
 

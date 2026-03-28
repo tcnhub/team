@@ -68,4 +68,9 @@ class Categoria extends Model
         }
         return $this->nombre;
     }
+
+    public function setEstadoAttribute($value): void
+    {
+        $this->attributes['estado'] = in_array($value, [true, 1, '1', 'activo', 'Activo'], true) ? 1 : 0;
+    }
 }

@@ -201,6 +201,34 @@
                                     </div>
                                 </div>
 
+                                @if($cliente->pasajeros->isNotEmpty())
+                                    <div class="mt-4">
+                                        <h5 class="mb-3 text-primary">
+                                            <i class="ri-group-line"></i> Pasajeros Vinculados
+                                        </h5>
+                                        <div class="table-responsive">
+                                            <table class="table table-bordered">
+                                                <thead>
+                                                <tr>
+                                                    <th>Pasajero</th>
+                                                    <th>Reserva</th>
+                                                    <th>Tour</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                @foreach($cliente->pasajeros as $pasajero)
+                                                    <tr>
+                                                        <td><a href="{{ route('admin.pasajeros.show', $pasajero) }}">{{ $pasajero->nombre_completo }}</a></td>
+                                                        <td><a href="{{ route('admin.reservas.show', $pasajero->reserva) }}">{{ $pasajero->reserva?->codigo_reserva ?? '—' }}</a></td>
+                                                        <td><a href="{{ route('admin.tours.show', $pasajero->tour) }}">{{ $pasajero->tour?->nombre_tour ?? '—' }}</a></td>
+                                                    </tr>
+                                                @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @endif
+
                                 <!-- Fechas del sistema -->
                                 <div class="mt-5 border-top pt-3">
                                     <small class="text-muted">

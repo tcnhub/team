@@ -386,8 +386,13 @@
             document.getElementById('nrtTourNombre').textContent = tourNombre;
             document.getElementById('nrt_cliente').value        = '';
             document.getElementById('nrt_agente').value         = '';
-            document.getElementById('nrt_fecha_inicio').value   = '';
-            document.getElementById('nrt_fecha_fin').value      = '';
+            if (window.setFlatpickrDate) {
+                window.setFlatpickrDate(document.getElementById('nrt_fecha_inicio'), '');
+                window.setFlatpickrDate(document.getElementById('nrt_fecha_fin'), '');
+            } else {
+                document.getElementById('nrt_fecha_inicio').value = '';
+                document.getElementById('nrt_fecha_fin').value = '';
+            }
             document.getElementById('nrt_num_pasajeros').value  = 1;
             document.getElementById('nrt_num_adultos').value    = 1;
             document.getElementById('nrt_num_ninos').value      = 0;
@@ -401,13 +406,20 @@
 
             // Auto-calc fecha_fin when fecha_inicio changes
             const fi = document.getElementById('nrt_fecha_inicio');
-            fi.oninput = function () {
+            const syncFechaFin = function () {
                 if (dias && this.value) {
                     const d = new Date(this.value + 'T00:00:00');
                     d.setDate(d.getDate() + dias - 1);
-                    document.getElementById('nrt_fecha_fin').value = d.toISOString().slice(0, 10);
+                    const fechaFin = d.toISOString().slice(0, 10);
+                    if (window.setFlatpickrDate) {
+                        window.setFlatpickrDate(document.getElementById('nrt_fecha_fin'), fechaFin);
+                    } else {
+                        document.getElementById('nrt_fecha_fin').value = fechaFin;
+                    }
                 }
             };
+            fi.oninput = syncFechaFin;
+            fi.onchange = syncFechaFin;
 
             new bootstrap.Modal(document.getElementById('modalNuevaReservaTour')).show();
         });

@@ -400,7 +400,12 @@
         const y = inicio.getFullYear();
         const m = String(inicio.getMonth() + 1).padStart(2, '0');
         const d = String(inicio.getDate()).padStart(2, '0');
-        inputFechaF.value = `${y}-${m}-${d}`;
+        const fechaFin = `${y}-${m}-${d}`;
+        if (window.setFlatpickrDate) {
+            window.setFlatpickrDate(inputFechaF, fechaFin);
+        } else {
+            inputFechaF.value = fechaFin;
+        }
     }
 
     async function cargarAvailabilities(tourId) {

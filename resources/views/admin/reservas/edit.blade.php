@@ -33,7 +33,7 @@
                             <div class="card-body">
 
                                 <!-- ==================== FORMULARIO (PARTIAL REUTILIZABLE) ==================== -->
-                                @include('reservas.partials.form', ['reserva' => $reserva])
+                                @include('admin.reservas.partials.form', ['reserva' => $reserva])
                                 <!-- ======================================================== -->
 
                             </div><!-- end card-body -->
