@@ -77,7 +77,18 @@ class TourController extends Controller
 
     public function show(Tour $tour)
     {
-        $tour->load(['categorias', 'addons', 'precios', 'calendarYears', 'pasajeros.cliente', 'reservas.cliente']);
+        $tour->load([
+            'categorias',
+            'addons',
+            'precios',
+            'calendarYears',
+            'pasajeros.cliente',
+            'reservas.cliente',
+            'priceSections' => fn ($query) => $query->orderByRaw('anio is null desc')->orderBy('anio')->orderBy('orden')->orderBy('id'),
+            'priceSections.simpleItems',
+            'priceSections.personRows',
+            'priceSections.groupRows',
+        ]);
 
         return view('admin.tours.show', compact('tour'));
     }

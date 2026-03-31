@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\ReservaController;
 use App\Http\Controllers\Admin\TourAvailabilityController;
 use App\Http\Controllers\Admin\TourCalendarController;
 use App\Http\Controllers\Admin\TourController;
+use App\Http\Controllers\Admin\TourPricingController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,14 @@ Route::prefix('admin')
             // ── Tours ──────────────────────────────────────────────────────
             Route::resource('tours', TourController::class);
             Route::get('tours/{tour}/addons-json', [TourController::class, 'addonsJson'])->name('tours.addons.json');
+            Route::get('tours/{tour}/pricing-panel', [TourPricingController::class, 'panel'])->name('tours.pricing.panel');
+            Route::post('tours/{tour}/pricing/sections', [TourPricingController::class, 'storeSection'])->name('tours.pricing.sections.store');
+            Route::patch('tours/{tour}/pricing/sections/{section}', [TourPricingController::class, 'updateSection'])->name('tours.pricing.sections.update');
+            Route::patch('tours/{tour}/pricing/sections/{section}/sync', [TourPricingController::class, 'syncSection'])->name('tours.pricing.sections.sync');
+            Route::delete('tours/{tour}/pricing/sections/{section}', [TourPricingController::class, 'destroySection'])->name('tours.pricing.sections.destroy');
+            Route::post('tours/{tour}/pricing/sections/{section}/items', [TourPricingController::class, 'storeItem'])->name('tours.pricing.items.store');
+            Route::patch('tours/{tour}/pricing/sections/{section}/items/{item}', [TourPricingController::class, 'updateItem'])->name('tours.pricing.items.update');
+            Route::delete('tours/{tour}/pricing/sections/{section}/items/{item}', [TourPricingController::class, 'destroyItem'])->name('tours.pricing.items.destroy');
 
             // Calendario de disponibilidad por tour
             Route::prefix('tours/{tour}/calendar')->name('tours.calendar.')->group(function () {

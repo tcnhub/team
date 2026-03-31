@@ -57,6 +57,11 @@ class Tour extends Model
         return $this->hasMany(TourPrecio::class);
     }
 
+    public function priceSections()
+    {
+        return $this->hasMany(TourPriceSection::class)->orderBy('anio')->orderBy('orden')->orderBy('id');
+    }
+
     /**
      * Relación con los años de calendario
      */

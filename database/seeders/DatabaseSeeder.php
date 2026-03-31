@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             ProveedorSeeder::class,
             AdminSeeder::class,
             TourSeeder::class,
+            TourPricingSeeder::class,
             AddonSeeder::class,
             ConfiguracionSeeder::class,
             AgenteSeeder::class,

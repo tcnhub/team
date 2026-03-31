@@ -174,6 +174,12 @@
                     </div>
                 @endif
 
+                <div class="mb-4">
+                    <div id="tour-pricing-panel" data-panel-url="{{ route('admin.tours.pricing.panel', $tour) }}">
+                        @include('admin.tours.partials.pricing-panel', ['tour' => $tour])
+                    </div>
+                </div>
+
                 <!-- Calendarios por año -->
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
@@ -298,5 +304,221 @@
 @include('layouts.customizer')
 @include('layouts.vendor-scripts')
 <script src="{{ asset('assets/js/app.js') }}"></script>
+<style>
+    #tour-pricing-panel [data-sortable-row="1"] {
+        cursor: move;
+    }
+
+    #tour-pricing-panel [data-sortable-row="1"].is-dragging {
+        opacity: .55;
+    }
+
+    #tour-pricing-panel .drag-handle {
+        cursor: grab;
+        width: 28px;
+        height: 28px;
+    }
+</style>
+<script>
+    (() => {
+        const panel = document.getElementById('tour-pricing-panel');
+
+        if (!panel) {
+            return;
+        }
+
+        const getHeaders = (form) => ({
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': form.querySelector('input[name="_token"]')?.value || '',
+        });
+
+        const getErrorMessage = async (response) => {
+            try {
+                const payload = await response.json();
+
+                if (payload?.errors) {
+                    return Object.values(payload.errors).flat().join('\n');
+                }
+
+                if (payload?.message) {
+                    return payload.message;
+                }
+            } catch (error) {
+            }
+
+            return 'No se pudo guardar la configuracion de precios.';
+        };
+
+        const toggleButtonLoading = (button, isLoading) => {
+            if (!button) {
+                return;
+            }
+
+            button.disabled = isLoading;
+            button.querySelector('.button-default')?.classList.toggle('d-none', isLoading);
+            button.querySelector('.button-loading')?.classList.toggle('d-none', !isLoading);
+            button.querySelector('.button-success')?.classList.add('d-none');
+        };
+
+        const showButtonSuccess = (button) => {
+            if (!button || !button.querySelector('.button-success')) {
+                return;
+            }
+
+            button.querySelector('.button-default')?.classList.add('d-none');
+            button.querySelector('.button-loading')?.classList.add('d-none');
+            button.querySelector('.button-success')?.classList.remove('d-none');
+
+            window.setTimeout(() => {
+                button.querySelector('.button-success')?.classList.add('d-none');
+                button.querySelector('.button-default')?.classList.remove('d-none');
+            }, 1600);
+        };
+
+        const syncRowOrder = (tbody) => {
+            Array.from(tbody.querySelectorAll('tr[data-sortable-row="1"]')).forEach((row, index) => {
+                const orderInput = row.querySelector('input[name$="[orden]"]');
+
+                if (orderInput) {
+                    orderInput.value = index + 1;
+                }
+            });
+        };
+
+        const getDragAfterElement = (tbody, clientY) => {
+            const draggableRows = [...tbody.querySelectorAll('tr[data-sortable-row="1"]:not(.is-dragging)')];
+
+            return draggableRows.reduce((closest, row) => {
+                const box = row.getBoundingClientRect();
+                const offset = clientY - box.top - (box.height / 2);
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset, element: row };
+                }
+
+                return closest;
+            }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
+        };
+
+        const initSortableRows = () => {
+            panel.querySelectorAll('tbody[data-sortable-rows="1"]').forEach((tbody) => {
+                if (tbody.dataset.sortableReady === '1') {
+                    return;
+                }
+
+                tbody.dataset.sortableReady = '1';
+
+                tbody.addEventListener('dragstart', (event) => {
+                    const row = event.target.closest('tr[data-sortable-row="1"]');
+
+                    if (!row) {
+                        return;
+                    }
+
+                    row.classList.add('is-dragging');
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/plain', row.rowIndex.toString());
+                });
+
+                tbody.addEventListener('dragend', (event) => {
+                    const row = event.target.closest('tr[data-sortable-row="1"]');
+
+                    if (!row) {
+                        return;
+                    }
+
+                    row.classList.remove('is-dragging');
+                    syncRowOrder(tbody);
+                });
+
+                tbody.addEventListener('dragover', (event) => {
+                    event.preventDefault();
+
+                    const draggingRow = tbody.querySelector('.is-dragging');
+
+                    if (!draggingRow) {
+                        return;
+                    }
+
+                    const afterElement = getDragAfterElement(tbody, event.clientY);
+
+                    if (!afterElement) {
+                        tbody.appendChild(draggingRow);
+                        return;
+                    }
+
+                    if (afterElement !== draggingRow) {
+                        tbody.insertBefore(draggingRow, afterElement);
+                    }
+                });
+
+                syncRowOrder(tbody);
+            });
+        };
+
+        initSortableRows();
+
+        panel.addEventListener('submit', async (event) => {
+            const form = event.target.closest('form[data-pricing-ajax]');
+
+            if (!form) {
+                return;
+            }
+
+            event.preventDefault();
+
+            const intendedMethod = (form.dataset.httpMethod || form.method || 'POST').toUpperCase();
+            const confirmMessage = form.dataset.confirm;
+            const submitButtons = form.querySelectorAll('button[type="submit"]');
+            const submitter = event.submitter;
+            const successButtonSelector = submitter?.querySelector('.button-success')
+                ? `form[action="${form.action}"] button[type="submit"]`
+                : null;
+
+            if (confirmMessage && !window.confirm(confirmMessage)) {
+                return;
+            }
+
+            submitButtons.forEach((button) => {
+                if (button !== submitter) {
+                    button.disabled = true;
+                }
+            });
+            toggleButtonLoading(submitter, true);
+
+            try {
+                const payload = new FormData(form);
+
+                if (intendedMethod !== 'POST') {
+                    payload.set('_method', intendedMethod);
+                }
+
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: getHeaders(form),
+                    body: payload,
+                });
+
+                if (!response.ok) {
+                    throw new Error(await getErrorMessage(response));
+                }
+
+                const data = await response.json();
+                panel.innerHTML = data.html;
+                initSortableRows();
+
+                if (successButtonSelector) {
+                    showButtonSuccess(panel.querySelector(successButtonSelector));
+                }
+            } catch (error) {
+                window.alert(error.message || 'No se pudo guardar la configuracion de precios.');
+            } finally {
+                submitButtons.forEach((button) => button.disabled = false);
+                toggleButtonLoading(submitter, false);
+            }
+        });
+    })();
+</script>
 </body>
 </html>
